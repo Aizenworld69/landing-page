@@ -12,6 +12,7 @@ type Registration = {
   email: string;
   referral: string;
   role: string;
+  company: string;
   created_at: string;
 };
 
@@ -32,6 +33,7 @@ export default function ExportRegistrations({ data }: ExportRegistrationsProps) 
       { header: 'Email', key: 'email', width: 30 },
       { header: 'Nguồn Thông Tin', key: 'referral', width: 20 },
       { header: 'Vai Trò', key: 'role', width: 15 },
+      { header: 'Tên Công Ty', key: 'company', width: 25 },
       { header: 'Ngày Đăng Ký', key: 'created_at', width: 25 },
     ];
 

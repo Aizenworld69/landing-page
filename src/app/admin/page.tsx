@@ -15,6 +15,7 @@ type Registration = {
   email: string;
   referral: string;
   role: string;
+  company: string;
   created_at: string;
 };
 
@@ -92,6 +93,12 @@ export default async function AdminPage(props: {
                   <tr key={reg.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="p-5">
                       <div className="font-bold text-slate-900 text-lg mb-1">{reg.fullname}</div>
+                      {reg.company && (
+                        <div className="flex items-center gap-1.5 text-slate-600 text-sm mb-2 font-medium">
+                          <span className="material-symbols-outlined text-[14px]">domain</span>
+                          {reg.company}
+                        </div>
+                      )}
                       <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase bg-primary/10 text-primary border border-primary/20">
                         ID: #{reg.id}
                       </div>

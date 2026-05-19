@@ -11,6 +11,7 @@ export async function submitRegistration(formData: FormData) {
     const email = formData.get('email')?.toString().trim();
     const referral = formData.get('referral')?.toString().trim();
     const role = formData.get('role')?.toString().trim();
+    const company = formData.get('company')?.toString().trim() || '';
     const honeypot = formData.get('website')?.toString();
 
     // 1. Chống Spam: Kiểm tra Honeypot (Bot thường sẽ điền vào trường này)
@@ -39,8 +40,8 @@ export async function submitRegistration(formData: FormData) {
     // Chuyển sang chuỗi ISO nhưng bù thêm 7 giờ để khớp múi giờ địa phương
     const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000)).toISOString().replace('T', ' ').substring(0, 19);
 
-    const stmt = db.prepare('INSERT INTO registrations (fullname, phone, email, referral, role, created_at) VALUES (?, ?, ?, ?, ?, ?)');
-    stmt.run(fullname, phone, email, referral, role, vietnamTime);
+    const stmt = db.prepare('INSERT INTO registrations (fullname, phone, email, referral, role, company, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(fullname, phone, email, referral, role, company, vietnamTime);
 
     // 5. Gửi thông báo sang Lark (AnyCross/Webhook) dạng Text
     try {
@@ -49,6 +50,7 @@ export async function submitRegistration(formData: FormData) {
 Email: ${email}
 Nguồn: ${referral}
 Vai trò: ${role}
+Công ty: ${company}
 Thời gian: ${vietnamTime}`;
 
       await fetch('https://open-sg.larksuite.com/anycross/trigger/callback/MDczOWJlNzg4NTc0MzliZjlhMDZhNDhiOWYyNGM5YzE4', {

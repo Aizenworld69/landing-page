@@ -12,6 +12,7 @@ db.exec(`
     email TEXT NOT NULL,
     referral TEXT,
     role TEXT,
+    company TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -34,6 +35,10 @@ try {
 
 try {
   db.exec('ALTER TABLE registrations ADD COLUMN role TEXT');
+} catch (e) {}
+
+try {
+  db.exec('ALTER TABLE registrations ADD COLUMN company TEXT');
 } catch (e) {}
 
 

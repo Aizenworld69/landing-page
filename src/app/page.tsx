@@ -355,8 +355,8 @@ export default function Home() {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-tertiary">Buổi 3:</span> Khai phá Sức mạnh AI
               </span>
               <br className="hidden md:block" />
-              <span className="text-3xl md:text-4xl lg:text-5xl mt-2 block text-on-surface-variant font-bold">
-                Làm chủ <span className="text-on-surface">NotebookLM</span> &amp; <span className="text-on-surface">Gamma App</span>
+              <span className="text-3xl md:text-4xl lg:text-5xl mt-2 block text-red-600 font-bold">
+                Làm chủ <span className="text-red-600">NotebookLM</span> &amp; <span className="text-red-600">Gamma App</span>
               </span>
             </motion.h1>
 
@@ -392,10 +392,10 @@ export default function Home() {
                     delay: 0.8,
                     duration: 0.5
                   }}
-                  className="mt-4 flex items-center gap-3 md:gap-4 px-6 py-4 md:px-12 md:py-5 rounded-2xl md:rounded-[2.5rem] bg-gradient-to-br from-tertiary to-tertiary-dim text-white border-2 border-white/20 shadow-2xl shadow-tertiary/40"
+                  className="mt-4 flex items-center gap-3 md:gap-4 px-6 py-4 md:px-12 md:py-5 rounded-2xl md:rounded-[2.5rem] bg-white border-2 border-red-100 shadow-2xl shadow-red-600/20"
                 >
-                  <span className="material-symbols-outlined text-[24px] md:text-[32px]">verified</span>
-                  <span className="font-headline font-black text-lg md:text-3xl uppercase tracking-widest italic">
+                  <span className="material-symbols-outlined text-[24px] md:text-[32px] text-red-600">verified</span>
+                  <span className="font-headline font-black text-lg md:text-3xl uppercase tracking-widest italic text-red-600">
                     100% Offline thực hành
                   </span>
                 </motion.div>
@@ -648,10 +648,14 @@ export default function Home() {
                       <span className="material-symbols-outlined">calendar_month</span>
                     </div>
                     <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Thời gian</p>
-                    <p className="font-bold text-on-surface">Thứ Bảy, 16/05/2026</p>
-                    <p className="text-sm text-on-surface-variant">08:30 - 11:30</p>
+                    <p className="font-bold text-on-surface">Thứ Bảy, 06/06/2026</p>
+                    <p className="text-sm text-on-surface-variant mb-2">08:30 - 11:30</p>
+                    <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-600 rounded-md border border-red-100">
+                      <span className="material-symbols-outlined text-[14px]">warning</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider">Hạn chót Đăng Ký: 31/05</span>
+                    </div>
                   </div>
-                  <motion.a 
+                  <motion.a
                     href="https://www.google.com/maps/search/?api=1&query=Nguy%E1%BB%85n+%C4%90%C3%ACnh+Chi%E1%BB%83u,+H%E1%BB%93+Ch%C3%AD+Minh"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -661,7 +665,7 @@ export default function Home() {
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <span className="material-symbols-outlined text-6xl rotate-12">map</span>
                     </div>
-                    
+
                     <div className="relative mb-4">
                       <div className="w-10 h-10 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
                         <span className="material-symbols-outlined">location_on</span>
@@ -715,7 +719,7 @@ export default function Home() {
                       <div className="space-y-2 text-sm text-on-surface-variant">
                         <p><span className="font-bold text-on-surface">Ngân hàng:</span> TPBank</p>
                         <p><span className="font-bold text-on-surface">Chủ tài khoản:</span> NGUYEN HOANG MINH</p>
-                        <p><span className="font-bold text-on-surface">Số tài khoản:</span> <span className="text-primary font-bold">0987 6543 210</span></p>
+                        <p><span className="font-bold text-on-surface">Số tài khoản:</span> <span className="text-primary font-bold">0000 5895 437</span></p>
                         <p><span className="font-bold text-on-surface">Nội dung:</span> Workshop3 [Họ Tên] [SĐT]</p>
                       </div>
                     </div>
@@ -731,7 +735,7 @@ export default function Home() {
               className="col-span-12 lg:col-span-5 order-1 lg:order-2 lg:pl-16"
             >
               <div className="bg-surface-container-lowest p-10 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.05)] border border-outline-variant/10">
-                <h3 className="text-red-600 font-black font-headline text-3xl mb-3 tracking-tight uppercase italic">BUỔI 3: KHAI PHÁ SỨC MẠNH AI</h3>
+                <h3 className="text-red-600 font-black font-headline text-2xl lg:text-3xl mb-3 tracking-tight uppercase italic">BUỔI 3: LÀM CHỦ NOTEBOOKLM & GAMMA APP</h3>
                 <h2 className="text-3xl font-black font-headline mb-2 tracking-tight">Đăng ký tham gia ngay</h2>
                 <p className="text-sm text-on-surface-variant mb-8">Hoàn thành thông tin bên dưới để giữ chỗ.</p>
                 <form action={handleAction} className="space-y-6">
@@ -751,6 +755,10 @@ export default function Home() {
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-on-surface-variant font-headline ml-1 uppercase" htmlFor="email">Email công việc</label>
                     <input id="email" name="email" className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all outline-none text-on-surface" placeholder="name@company.com" type="email" required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-on-surface-variant font-headline ml-1 uppercase" htmlFor="company">Tên công ty</label>
+                    <input id="company" name="company" className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all outline-none text-on-surface" placeholder="Nhập tên công ty của bạn" type="text" required />
                   </div>
 
                   <CustomSelect
@@ -840,7 +848,7 @@ export default function Home() {
             <div className="flex flex-col gap-6">
               <h4 className="font-headline font-bold text-slate-900 uppercase tracking-widest text-xs">Thông tin liên hệ</h4>
               <div className="space-y-4">
-                <a 
+                <a
                   href="https://www.google.com/maps/search/?api=1&query=112+L%C3%BD+Ph%E1%BB%A5c+Man,+Ph%C6%B0%E1%BB%9Dng+T%C3%A2n+Thu%E1%BA%ADn,+Th%C3%A0nh+ph%E1%BB%91+H%E1%BB%93+Ch%C3%AD+Minh"
                   target="_blank"
                   rel="noopener noreferrer"
