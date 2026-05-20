@@ -656,7 +656,7 @@ export default function Home() {
                     </div>
                   </div>
                   <motion.a
-                    href="https://www.google.com/maps/search/?api=1&query=Nguy%E1%BB%85n+%C4%90%C3%ACnh+Chi%E1%BB%83u,+H%E1%BB%93+Ch%C3%AD+Minh"
+                    href="https://maps.app.goo.gl/b1KLmyfsSRXJrSfD9"
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ y: -5 }}
