@@ -349,14 +349,13 @@ export default function Home() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-headline font-extrabold text-on-background tracking-tight leading-tight mb-8"
+              className="font-headline font-extrabold text-on-background tracking-tight leading-tight mb-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
             >
-              <span className="text-4xl md:text-5xl lg:text-7xl">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-tertiary">Buổi 3:</span> Khai phá Sức mạnh AI
+              <span className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-tertiary">
+                Buổi 3:
               </span>
-              <br className="hidden md:block" />
-              <span className="text-3xl md:text-4xl lg:text-5xl mt-2 block text-red-600 font-bold">
-                Làm chủ <span className="text-red-600">NotebookLM</span> &amp; <span className="text-red-600">Gamma App</span>
+              <span className="text-4xl md:text-6xl lg:text-7xl text-red-600 font-black leading-[1.1]">
+                8 Tiếng Còn 3 Nhờ Claude
               </span>
             </motion.h1>
 
@@ -366,7 +365,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-on-surface-variant max-w-3xl mx-auto mb-12 leading-relaxed"
             >
-              Khám phá cách ứng dụng AI để <strong className="text-primary">tổng hợp tài liệu thần tốc</strong> với NotebookLM và thiết kế <strong className="text-tertiary">bài thuyết trình chuyên nghiệp</strong> trong tích tắc cùng Gamma App. Trải nghiệm thực hành trực tiếp giúp bạn áp dụng ngay vào công việc!
+              Khám phá cách sử dụng <strong className="text-primary">Claude AI</strong> để tối ưu hóa quy trình làm việc, biến <strong className="text-tertiary">8 tiếng làm việc</strong> thành <strong className="text-primary">3 tiếng hiệu quả</strong>. Trải nghiệm thực hành trực tiếp giúp bạn áp dụng ngay vào công việc!
             </motion.p>
 
             <motion.div
@@ -417,10 +416,12 @@ export default function Home() {
                 <span className="material-symbols-outlined text-sm">star</span>
                 <span className="text-xs font-bold uppercase tracking-widest font-headline">3 LỢI ÍCH CỐT LÕI</span>
               </div>
-              <h2 className="text-4xl font-black font-headline tracking-tight mb-4 text-on-surface">
-                Thiết lập <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-tertiary">"Bộ não thứ 2"</span> &amp; Tạo Slide Thần Tốc
+              <h2 className="text-5xl font-black font-headline tracking-tight mb-4 text-red-600">
+                Làm chủ Claude AI &amp; Tối ưu hiệu suất
               </h2>
-              <p className="text-on-surface-variant max-w-2xl mx-auto text-lg">Học đi đôi với hành — kết quả thực tế ngay tại buổi chia sẻ.</p>
+              <p className="max-w-2xl mx-auto text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-tertiary to-primary animate-gradient-x">
+                Học đi đôi với hành — kết quả thực tế ngay tại buổi chia sẻ.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -434,13 +435,13 @@ export default function Home() {
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-white flex items-center justify-center mb-6 shadow-lg shadow-primary/30">
-                  <span className="material-symbols-outlined text-3xl">psychology</span>
+                  <span className="material-symbols-outlined text-3xl">timer</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold mb-4 uppercase tracking-wider">
                   <span>Lợi ích 1</span>
                 </div>
-                <h3 className="text-xl font-black font-headline mb-3 text-on-surface leading-tight">Xây dựng "Bộ não thứ 2" cho doanh nghiệp</h3>
-                <p className="text-on-surface-variant leading-relaxed text-sm">Quản lý hàng ngàn tài liệu với <strong className="text-on-surface">độ chính xác 100%</strong>, trích dẫn nguồn ngay lập tức, loại bỏ hoàn toàn tình trạng AI "ảo tưởng" thông tin.</p>
+                <h3 className="text-xl font-black font-headline mb-3 text-on-surface leading-tight">Tiết kiệm 60% thời gian làm việc</h3>
+                <p className="text-on-surface-variant leading-relaxed text-sm">Cắt giảm thời gian xử lý task từ 8 tiếng xuống còn <strong className="text-on-surface">3 tiếng</strong> nhờ tốc độ siêu tốc của Claude, giải phóng 5 giờ mỗi ngày cho bạn.</p>
               </motion.div>
 
               {/* Benefit 2 */}
@@ -453,13 +454,13 @@ export default function Home() {
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-tertiary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-tertiary to-tertiary/70 text-white flex items-center justify-center mb-6 shadow-lg shadow-tertiary/30">
-                  <span className="material-symbols-outlined text-3xl">groups</span>
+                  <span className="material-symbols-outlined text-3xl">trending_up</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-tertiary/10 text-tertiary rounded-full text-xs font-bold mb-4 uppercase tracking-wider">
                   <span>Lợi ích 2</span>
                 </div>
-                <h3 className="text-xl font-black font-headline mb-3 text-on-surface leading-tight">Tối ưu hóa vận hành &amp; đào tạo nhân sự</h3>
-                <p className="text-on-surface-variant leading-relaxed text-sm">Trợ lý cuộc họp, quy trình phức tạp thành bộ câu hỏi trắc nghiệm, kịch bản huấn luyện và <strong className="text-on-surface">podcast nội bộ chỉ trong vài giây</strong>.</p>
+                <h3 className="text-xl font-black font-headline mb-3 text-on-surface leading-tight">X3 hiệu suất và chất lượng đầu ra</h3>
+                <p className="text-on-surface-variant leading-relaxed text-sm">Đóng vai trò như cộng sự AI thông minh giúp <strong className="text-on-surface">tăng 300% năng suất</strong>, tối ưu hóa ý tưởng và nâng tầm chất lượng sản phẩm chuẩn xác hơn.</p>
               </motion.div>
 
               {/* Benefit 3 */}
@@ -472,104 +473,13 @@ export default function Home() {
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-400 text-white flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/30">
-                  <span className="material-symbols-outlined text-3xl">slideshow</span>
+                  <span className="material-symbols-outlined text-3xl">settings_account_box</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold mb-4 uppercase tracking-wider">
                   <span>Lợi ích 3</span>
                 </div>
-                <h3 className="text-xl font-black font-headline mb-3 text-on-surface leading-tight">Tạo Slide trình chiếu chuyên nghiệp thần tốc</h3>
-                <p className="text-on-surface-variant leading-relaxed text-sm">Biến mớ tài liệu hỗn độn thành bản thuyết trình lung linh, đầy đủ hình ảnh và bố cục chuyên nghiệp <strong className="text-on-surface">trong 3 phút</strong> nhờ NotebookLM + Gamma AI.</p>
-              </motion.div>
-            </div>
-          </motion.div>
-        </section>
-
-        {/* Target Audience Section */}
-        <section className="py-24 px-8 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-tertiary/5"></div>
-          <motion.div
-            initial={{ y: 40, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="max-w-7xl mx-auto relative z-10"
-          >
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full mb-4">
-                <span className="material-symbols-outlined text-sm">group</span>
-                <span className="text-xs font-bold uppercase tracking-widest font-headline">AI BẮT BUỘC PHẢI CÓ MẶT</span>
-              </div>
-              <h2 className="text-4xl font-black font-headline tracking-tight mb-4 text-on-surface">
-                Workshop này dành cho <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-tertiary">ai?</span>
-              </h2>
-              <p className="text-on-surface-variant max-w-2xl mx-auto text-lg">3 nhóm đối tượng sẽ nhận được lợi ích lớn nhất từ buổi học này.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* CEO */}
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="relative bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 to-orange-500 rounded-t-[2rem]"></div>
-                <div className="w-16 h-16 rounded-2xl bg-amber-50 border-2 border-amber-200 flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-3xl text-amber-500">business_center</span>
-                </div>
-                <h3 className="text-xl font-black font-headline mb-2 text-on-surface">CEO / Chủ doanh nghiệp</h3>
-                <div className="w-10 h-1 bg-amber-400 rounded-full mb-4"></div>
-                <p className="text-on-surface-variant text-sm leading-relaxed">Muốn <strong className="text-on-surface">rảnh tay</strong> khỏi việc quản trị sự vụ, cần trợ lý ảo tổng hợp số liệu chéo để <strong className="text-on-surface">ra quyết định nhanh</strong>.</p>
-                <div className="mt-6 flex items-center gap-2 text-amber-600">
-                  <span className="material-symbols-outlined text-base">check_circle</span>
-                  <span className="text-xs font-bold">Phù hợp cao nhất</span>
-                </div>
-              </motion.div>
-
-              {/* Manager */}
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="relative bg-white rounded-[2rem] p-8 border-2 border-primary/20 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-tertiary rounded-t-[2rem]"></div>
-                <div className="absolute -top-1 -right-1 px-3 py-1 bg-primary text-white text-[10px] font-black uppercase tracking-wider rounded-bl-xl rounded-tr-[2rem]">
-                  Phổ biến nhất
-                </div>
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-3xl text-primary">manage_accounts</span>
-                </div>
-                <h3 className="text-xl font-black font-headline mb-2 text-on-surface">Cấp quản lý</h3>
-                <p className="text-xs text-on-surface-variant font-bold uppercase tracking-wider mb-1">Manager, Trưởng phòng HR/Sales/Marketing</p>
-                <div className="w-10 h-1 bg-primary rounded-full mb-4"></div>
-                <p className="text-on-surface-variant text-sm leading-relaxed">Ngập lụt trong giấy tờ, báo cáo, muốn <strong className="text-on-surface">số hóa quy trình đào tạo</strong> và giám sát nhân sự hiệu quả hơn.</p>
-                <div className="mt-6 flex items-center gap-2 text-primary">
-                  <span className="material-symbols-outlined text-base">check_circle</span>
-                  <span className="text-xs font-bold">Phù hợp cao nhất</span>
-                </div>
-              </motion.div>
-
-              {/* Office Staff */}
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-                className="relative bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-t-[2rem]"></div>
-                <div className="w-16 h-16 rounded-2xl bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center mb-6">
-                  <span className="material-symbols-outlined text-3xl text-emerald-600">laptop_mac</span>
-                </div>
-                <h3 className="text-xl font-black font-headline mb-2 text-on-surface">Chuyên viên khối văn phòng</h3>
-                <div className="w-10 h-1 bg-emerald-400 rounded-full mb-4"></div>
-                <p className="text-on-surface-variant text-sm leading-relaxed">Muốn <strong className="text-on-surface">nhân X10 hiệu suất</strong> làm việc, tối ưu thời gian làm slide, làm báo cáo để tạo <strong className="text-on-surface">lợi thế thăng tiến</strong>.</p>
-                <div className="mt-6 flex items-center gap-2 text-emerald-600">
-                  <span className="material-symbols-outlined text-base">check_circle</span>
-                  <span className="text-xs font-bold">Phù hợp cao nhất</span>
-                </div>
+                <h3 className="text-xl font-black font-headline mb-3 text-on-surface leading-tight">Chuẩn hóa 100% quy trình cốt lõi</h3>
+                <p className="text-on-surface-variant leading-relaxed text-sm">Tự động hóa hoàn toàn các tác vụ lặp đi lặp lại và xây dựng SOP chuẩn chỉnh, giúp <strong className="text-on-surface">giảm 80% áp lực</strong> vận hành công việc hàng ngày.</p>
               </motion.div>
             </div>
           </motion.div>
@@ -652,7 +562,7 @@ export default function Home() {
                     <p className="text-sm text-on-surface-variant mb-2">08:30 - 11:30</p>
                     <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-600 rounded-md border border-red-100">
                       <span className="material-symbols-outlined text-[14px]">warning</span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider">Hạn chót Đăng Ký: 31/05</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider">Hạn chót Đăng Ký: 03/06</span>
                     </div>
                   </div>
                   <motion.a
@@ -674,7 +584,8 @@ export default function Home() {
                     </div>
 
                     <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Địa điểm</p>
-                    <p className="font-bold text-on-surface mb-1">PTIT - Nguyễn Đình Chiểu, TP. HCM</p>
+                    <p className="font-bold text-on-surface mb-1">11 Nguyễn Đình Chiểu, P. Đa Kao, TPHCM</p>
+                    <p className="text-[10px] leading-tight text-on-surface-variant mb-2">(Trung tâm Đào tạo Bưu chính Viễn thông PTTC - Học viện PTIT)</p>
                     <div className="flex items-center gap-2 text-sm font-bold text-primary group-hover:gap-3 transition-all">
                       <span>Xem trên bản đồ</span>
                       <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
@@ -735,7 +646,7 @@ export default function Home() {
               className="col-span-12 lg:col-span-5 order-1 lg:order-2 lg:pl-16"
             >
               <div className="bg-surface-container-lowest p-10 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.05)] border border-outline-variant/10">
-                <h3 className="text-red-600 font-black font-headline text-2xl lg:text-3xl mb-3 tracking-tight uppercase italic">BUỔI 3: LÀM CHỦ NOTEBOOKLM & GAMMA APP</h3>
+                <h3 className="text-red-600 font-black font-headline text-2xl lg:text-3xl mb-3 tracking-tight uppercase italic">BUỔI 3: 8 TIẾNG CÒN 3 - NHỜ CLAUDE</h3>
                 <h2 className="text-3xl font-black font-headline mb-2 tracking-tight">Đăng ký tham gia ngay</h2>
                 <p className="text-sm text-on-surface-variant mb-8">Hoàn thành thông tin bên dưới để giữ chỗ.</p>
                 <form action={handleAction} className="space-y-6">
