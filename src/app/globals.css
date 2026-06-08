@@ -79,3 +79,14 @@ body {
 .data-pulse {
   box-shadow: 0 0 15px rgba(0, 210, 253, 0.4);
 }
+
+/* Utility: bright white with subtle glow for emphasis */
+.glow-white {
+  color: #ffffff !important;
+  text-shadow: 0 6px 20px rgba(255,255,255,0.06), 0 0 30px rgba(59, 130, 246,0.04);
+}
+
+.glow-white-strong {
+  color: #ffffff !important;
+  text-shadow: 0 8px 32px rgba(255,255,255,0.09), 0 0 36px rgba(59, 130, 246,0.06);
+}

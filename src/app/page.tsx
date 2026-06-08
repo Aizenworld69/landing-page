@@ -1,9 +1,10 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useSpring, useMotionValue, useTransform } from 'framer-motion';
 import Image from 'next/image';
-import { submitRegistration } from './actions';
+import { eventDate, eventAddress, eventPrice } from '../lib/siteConfig';
+import { submitRegistration, submitGroupRegistration } from './actions';
 
 function CustomSelect({
   label,
@@ -28,24 +29,24 @@ function CustomSelect({
 
   return (
     <div className="space-y-2 relative">
-      <label className="text-sm font-bold text-on-surface-variant font-headline ml-1 uppercase" htmlFor={name}>{label}</label>
+      <label className="text-sm font-bold text-slate-200 font-headline ml-1 uppercase" htmlFor={name}>{label}</label>
       <input type="hidden" name={name} value={isOther ? otherValue : selected} required={required} />
 
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative group cursor-pointer w-full pl-12 pr-12 py-4 bg-surface-container-low border-2 rounded-2xl transition-all duration-300 flex items-center ${isOpen ? 'border-primary bg-white ring-4 ring-primary/10 shadow-lg' : 'border-transparent hover:bg-surface-container'
+        className={`relative group cursor-pointer w-full pl-12 pr-12 py-4 bg-white/8 border-2 rounded-2xl transition-all duration-300 flex items-center ${isOpen ? 'border-[#3b82f6] bg-white/8 ring-4 ring-[#3b82f6]/10 shadow-lg' : 'border-transparent hover:bg-white/8'
           }`}
       >
-        <span className={`material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${isOpen || selected ? 'text-primary' : 'text-on-surface-variant'
+        <span className={`material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${isOpen || selected ? 'text-primary' : 'text-slate-200'
           }`}>
           {icon}
         </span>
 
-        <span className={`font-medium ${selected ? 'text-on-surface' : 'text-on-surface-variant/60'}`}>
+        <span className={`font-medium ${selected ? 'text-white' : 'text-slate-200'}`}>
           {selected || placeholder}
         </span>
 
-        <span className={`material-symbols-outlined absolute right-5 top-1/2 -translate-y-1/2 transition-transform duration-300 ${isOpen ? 'rotate-180 text-primary' : 'text-on-surface-variant'
+        <span className={`material-symbols-outlined absolute right-5 top-1/2 -translate-y-1/2 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#3b82f6]' : 'text-slate-200'
           }`}>
           expand_more
         </span>
@@ -62,7 +63,7 @@ function CustomSelect({
               animate={{ opacity: 1, y: 5, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute left-0 right-0 z-50 bg-white rounded-2xl shadow-2xl border border-outline-variant/10 overflow-hidden py-2"
+              className="absolute left-0 right-0 z-50 bg-[#13283e] rounded-2xl shadow-2xl border border-white/10 overflow-hidden py-2"
             >
               {options.map((option) => (
                 <div
@@ -74,7 +75,7 @@ function CustomSelect({
                   }}
                   className={`px-5 py-3 text-sm font-medium transition-colors flex items-center justify-between cursor-pointer ${selected === option
                     ? 'bg-primary/10 text-primary'
-                    : 'text-on-surface hover:bg-surface-container-low'
+                    : 'text-slate-200 hover:bg-white/5'
                     }`}
                 >
                   {option}
@@ -102,7 +103,7 @@ function CustomSelect({
               value={otherValue}
               onChange={(e) => setOtherValue(e.target.value)}
               required={required}
-              className="w-full mt-2 px-5 py-3 bg-surface-container-low border-2 border-primary/20 rounded-xl focus:border-primary focus:bg-white transition-all outline-none text-on-surface text-sm font-medium"
+              className="w-full mt-2 px-5 py-3 bg-white/8 border-2 border-[#3b82f6]/20 rounded-xl focus:border-[#3b82f6] focus:bg-white/10 transition-all outline-none text-white glow-white text-sm font-medium"
             />
           </motion.div>
         )}
@@ -111,33 +112,133 @@ function CustomSelect({
   );
 }
 
+function SkillCard({
+  icon,
+  iconColor,
+  iconBg,
+  title,
+  description
+}: {
+  icon: string;
+  iconColor: string;
+  iconBg: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ y: -5 }}
+      className="group bg-[#13283e] p-8 rounded-3xl shadow-[0_0_40px_rgba(59, 130, 246,0.05)] hover:shadow-[0_0_60px_rgba(59, 130, 246,0.08)] transition-all border border-white/8 hover:border-[#3b82f6]/30 hover:bg-white/6 flex flex-col items-start justify-between min-h-[260px] text-left"
+    >
+      <div className="flex flex-col items-start">
+        <div className={`w-12 h-12 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center mb-6`}>
+          <span className="material-symbols-outlined text-2xl font-bold">{icon}</span>
+        </div>
+        <h3 className="text-lg font-black font-headline text-white glow-white mb-3 tracking-tight">{title}</h3>
+        <p className="text-white glow-white text-sm leading-relaxed font-normal">
+          {description}
+        </p>
+      </div>
+      <div className="h-4"></div>
+    </motion.div>
+  );
+}
+
 export default function Home() {
+  // Spotlight motion values (tracks mouse)
+  const mouseX = useMotionValue(typeof window !== 'undefined' ? window.innerWidth / 2 : 0);
+  const mouseY = useMotionValue(typeof window !== 'undefined' ? window.innerHeight / 2 : 0);
+  const spotX = useSpring(mouseX, { stiffness: 80, damping: 20 });
+  const spotY = useSpring(mouseY, { stiffness: 80, damping: 20 });
+
+  const spotlightMask = useTransform([spotX, spotY], (latest: number[]) => {
+    const [x, y] = latest;
+    return `radial-gradient(650px circle at ${x}px ${y}px, transparent 0%, transparent 20%, rgba(0,0,0,0.20) 45%, rgba(0,0,0,0.42) 70%, rgba(0,0,0,0.52) 100%)`;
+  });
+
+  const glowX = useTransform(spotX, (v: number) => v - 350);
+  const glowY = useTransform(spotY, (v: number) => v - 350);
+
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
+    };
+    window.addEventListener('mousemove', handleMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMove);
+  }, [mouseX, mouseY]);
   const [formState, setFormState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [activeSection, setActiveSection] = useState('');
+  const [paymentContent, setPaymentContent] = useState('HỌ TÊN - SĐT');
+  const [paymentAmount, setPaymentAmount] = useState(2200000);
+  const [registeredPkg, setRegisteredPkg] = useState('Nhóm 2 người');
+  const [selectedPackage, setSelectedPackage] = useState('Nhóm 2 người');
+  const [formStep, setFormStep] = useState<number>(1);
+  const [fullnameInput, setFullnameInput] = useState('');
+  const [phoneInput, setPhoneInput] = useState('');
+  const [submittedName, setSubmittedName] = useState('');
+  const [submittedPhone, setSubmittedPhone] = useState('');
+  // Modal đăng ký nhóm
+  const [showRegModal, setShowRegModal] = useState(false);
+  const [modalPkg, setModalPkg] = useState('Nhóm 2 người');
+  const [regFormState, setRegFormState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [regError, setRegError] = useState('');
+
+  // Countdown target: 2026-06-27T08:00:00+07:00
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [mounted, setMounted] = useState(false);
 
   // Scroll progress bar
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
+    const rafId = requestAnimationFrame(() => setMounted(true));
+    const target = new Date('2026-06-27T08:00:00+07:00').getTime();
+
+    const updateTime = () => {
+      const now = new Date().getTime();
+      const difference = target - now;
+      if (difference <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      } else {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000)
+        });
+      }
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
-      const sections = ['values', 'speakers', 'register'];
+      const sections = ['skills', 'timeline', 'speakers', 'register'];
       let currentSection = '';
 
-      // Sử dụng ngưỡng 150px từ cạnh trên màn hình để xác định section đang xem
       for (const section of sections) {
         const el = document.getElementById(section);
         if (el) {
           const rect = el.getBoundingClientRect();
-          // Nếu phần đỉnh của section vượt qua ngưỡng 150px lên trên, nó là active
           if (rect.top <= 150) {
             currentSection = section;
           }
         }
       }
 
-      // Xoá trạng thái nếu đang ở trên cùng
       if (window.scrollY < 200) {
         currentSection = '';
       }
@@ -146,7 +247,7 @@ export default function Home() {
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Check immediately on mount
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -154,6 +255,14 @@ export default function Home() {
     setFormState('loading');
     const result = await submitRegistration(formData);
     if (result.success) {
+      // lưu tên + phone đã gửi để hiển thị trong modal QR
+      const sentName = formData.get('fullname')?.toString().trim() ?? '';
+      const sentPhone = formData.get('phone')?.toString().trim() ?? '';
+      setSubmittedName(sentName);
+      setSubmittedPhone(sentPhone);
+      setPaymentContent(result.paymentContent ?? 'HỌ TÊN - SĐT');
+      setPaymentAmount(result.amount ?? 2200000);
+      setRegisteredPkg(result.packageType ?? 'Nhóm 2 người');
       setFormState('success');
       setMessage(result.message || 'Thành công!');
     } else {
@@ -162,31 +271,90 @@ export default function Home() {
     }
   };
 
+  const openRegModal = (pkg: string) => {
+    setModalPkg(pkg);
+    setRegFormState('idle');
+    setRegError('');
+    setShowRegModal(true);
+  };
+
+  const handleGroupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setRegFormState('loading');
+    const formData = new FormData(e.currentTarget);
+    const result = await submitGroupRegistration(formData);
+    if (result.success) {
+      setRegFormState('success');
+    } else {
+      setRegFormState('error');
+      setRegError(result.error);
+    }
+  };
+
+  const getQRImage = (pkg: string) => {
+    if (pkg === 'Nhóm 2 người') return '/2nguoi.jpg';
+    if (pkg === 'Nhóm 4 người') return '/4nguoi.jpg';
+    return '/1nguoi.jpg'; // Early Bird + 1 người
+  };
+
+  const getMemberCount = (pkg: string) => {
+    if (pkg === 'Nhóm 2 người') return 2;
+    if (pkg === 'Nhóm 4 người') return 4;
+    return 1;
+  };
+
+  const timelineData = [
+    { time: '8:00', title: 'Check-in & warming up', description: '', badge: '30 PHÚT' },
+    { time: '8:30', title: 'Module 1: Tư duy đúng về AI', description: 'Bộ 3: Mindset – Skillset – Toolset; Cấu trúc Prompt chuẩn', badge: '30 PHÚT' },
+    { time: '9:00', title: 'Module 2: Bộ 4 công cụ cốt lõi của Claude', description: 'Skills - não bộ chuyên môn; Projects - bộ nhớ dài hạn', badge: '1 GIỜ' },
+    { time: '10:00', title: 'Giải lao & Tea-break', description: '', badge: '20 PHÚT' },
+    { time: '10:20', title: 'Module 3: Bộ 4 công cụ cốt lõi của Claude', description: 'Connectors - cầu nối ra thế giới bên ngoài; Artifacts - xưởng sản xuất đầu ra', badge: '1 GIỜ' },
+    { time: '11:20', title: 'Module 4: Claude + NotebookLM', description: '', badge: '40 PHÚT' },
+    { time: '12:00', title: 'Nghỉ trưa & Networking', description: '', badge: '1 GIỜ 20 PHÚT' },
+    { time: '13:20', title: 'Warming up', description: '', badge: '10 PHÚT' },
+    { time: '13:30', title: 'Module 5: Claude + Canva', description: '', badge: '30 PHÚT' },
+    { time: '14:00', title: 'Module 6: Claude Cowork (phần 1)', description: '', badge: '1 GIỜ 30 PHÚT' },
+    { time: '15:30', title: 'Giải lao & Tea-break', description: '', badge: '15 PHÚT' },
+    { time: '15:45', title: 'Module 6: Claude Cowork (phần 2)', description: '', badge: '30 PHÚT' },
+    { time: '16:15', title: 'Module 7: Demo - Q&A', description: '', badge: '45 PHÚT' },
+    { time: '17:00', title: 'Kết thúc', description: '', badge: 'HOÀN THÀNH' }
+  ];
+
   return (
-    <main className="overflow-x-hidden relative min-h-screen">
-      {/* Scroll Progress Bar */}
+    <main className="overflow-x-hidden relative min-h-screen" style={{ background: '#0e2434' }}>
+      {/* Mouse Spotlight Overlay (masked dark layer - reveals content near cursor) */}
+      <motion.div
+        className="fixed inset-0 pointer-events-none z-[25]"
+        style={{
+          background: 'rgba(6,12,28,0.38)',
+          WebkitMaskImage: spotlightMask,
+          maskImage: spotlightMask,
+        }}
+      />
+      {/* Teal glow orb follows cursor */}
+      <motion.div
+        className="fixed pointer-events-none z-[24] rounded-full"
+        style={{
+          width: 700,
+          height: 700,
+          background: 'radial-gradient(circle, rgba(59, 130, 246,0.15) 0%, rgba(56,189,248,0.09) 35%, transparent 70%)',
+          filter: 'blur(25px)',
+          x: glowX,
+          y: glowY,
+        }}
+      />      {/* Scroll Progress Bar */}
       <motion.div
         style={{ scaleX }}
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-tertiary to-emerald-400 origin-left z-[200] shadow-lg shadow-primary/30"
+        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#3b82f6] via-[#38bdf8] to-blue-400 origin-left z-[200] shadow-lg shadow-[0_0_20px_rgba(59, 130, 246,0.12)]"
       />
-      {/* Toàn bộ Background */}
-      <div className="fixed inset-0 z-[-1]">
-        <Image
-          src="/new_background.jpg"
-          alt="Main Background"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-white/20"></div>
-      </div>
+
       {/* Toast for Errors */}
       {formState === 'error' ? (
         <motion.div
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 50, opacity: 0 }}
-          className="fixed bottom-28 right-4 z-[100] flex items-center gap-3 px-6 py-4 rounded-xl text-white shadow-2xl bg-red-500"
+          className="fixed bottom-28 right-4 z-[100] flex items-center gap-3 px-6 py-4 rounded-xl text-white glow-white shadow-2xl bg-red-500"
         >
           <span className="material-symbols-outlined">error</span>
           <span className="font-headline font-medium text-sm">{message}</span>
@@ -220,36 +388,45 @@ export default function Home() {
               </div>
 
               <div className="p-6 md:p-8 text-center">
-                <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="material-symbols-outlined text-2xl">check_circle</span>
                 </div>
-                <h3 className="text-2xl font-black font-headline text-on-surface mb-1">Đăng ký thành công!</h3>
+                <h3 className="text-2xl font-black font-headline text-[#2c2f31] mb-1">Đăng ký thành công!</h3>
                 <p className="text-slate-500 font-medium text-sm mb-6">Chúng tôi sẽ sớm liên hệ xác nhận với bạn....</p>
 
-                <div className="bg-emerald-50 rounded-2xl p-5 md:p-6 border border-emerald-100 relative overflow-hidden">
+                <div className="bg-blue-50/50 rounded-2xl p-5 md:p-6 border border-blue-100 relative overflow-hidden">
                   <div className="relative z-10">
-                    <h4 className="font-headline font-black text-sm md:text-base text-emerald-800 mb-4 uppercase tracking-wider leading-tight">
-                      Vui lòng quét QR thanh toán phí cam kết chia sẻ
+                    <h4 className="font-headline font-black text-sm md:text-base text-blue-800 mb-4 uppercase tracking-wider leading-tight">
+                      Vui lòng quét QR thanh toán học phí
                     </h4>
 
                     <div className="relative group mx-auto w-full max-w-[240px] md:max-w-[280px]">
-                      <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-2xl blur opacity-10 group-hover:opacity-20 transition duration-500"></div>
-                      <div className="relative bg-white p-2.5 rounded-2xl border border-emerald-100 shadow-lg">
+                      {/* Dynamic header: show entered fullname and phone above QR (preview) */}
+                      {(submittedName || submittedPhone) && (
+                        <div className="mb-3 text-left">
+                          <p className="text-xs text-slate-400">Quét mã để chuyển tiền đến</p>
+                          <p className="font-black text-white">{submittedName || 'NGUYEN HOANG MINH'}</p>
+                          {submittedPhone && <p className="text-sm text-slate-300">{submittedPhone}</p>}
+                        </div>
+                      )}
+                      <div className="absolute -inset-1.5 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-2xl blur opacity-10 group-hover:opacity-20 transition duration-500"></div>
+                      <div className="relative bg-white p-2.5 rounded-2xl border border-blue-100 shadow-lg">
                         <Image
-                          src="/qr_v1.jpg"
-                          alt="QR Phí Tea Break"
-                          width={400}
-                          height={400}
+                          src={`https://img.vietqr.io/image/TPB-00005895437-compact2.png?amount=${paymentAmount}&addInfo=${encodeURIComponent(paymentContent)}&accountName=${encodeURIComponent(submittedName || 'NGUYEN HOANG MINH')}`}
+                          alt="QR Thanh toán"
+                          width={280}
+                          height={280}
                           className="w-full h-auto rounded-lg"
                         />
                       </div>
                     </div>
 
                     <div className="mt-5 space-y-3">
-                      <p className="font-black text-emerald-700 text-sm">Phí cam kết: 150.000 VND</p>
-                      <div className="bg-white/90 backdrop-blur py-2.5 px-4 rounded-xl border border-dashed border-emerald-200 inline-block text-center w-full max-w-[240px]">
-                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-0.5">Nội dung chuyển khoản</p>
-                        <p className="text-sm font-black text-primary tracking-tight">HỌ TÊN - SỐ ĐIỆN THOẠI</p>
+                      <p className="font-black text-blue-700 text-sm">Gói đăng ký: {registeredPkg}</p>
+                      <p className="font-black text-blue-700 text-sm">Học phí: {paymentAmount.toLocaleString('vi-VN')} VND</p>
+                      <div className="bg-white/90 backdrop-blur py-2.5 px-4 rounded-xl border border-dashed border-blue-200 inline-block text-center w-full max-w-[240px]">
+                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-0.5">Nội dung chuyển khoản</p>
+                        <p className="text-sm font-black text-primary tracking-tight">{paymentContent}</p>
                       </div>
                     </div>
                   </div>
@@ -258,7 +435,7 @@ export default function Home() {
                 <div className="mt-6">
                   <button
                     onClick={() => setFormState('idle')}
-                    className="w-full max-w-[120px] py-2.5 bg-slate-900 text-white rounded-full font-bold text-sm hover:bg-slate-800 transition-colors"
+                    className="w-full max-w-[120px] py-2.5 bg-slate-900 text-white glow-white rounded-full font-bold text-sm hover:bg-slate-800 transition-colors"
                   >
                     Đã hiểu
                   </button>
@@ -270,7 +447,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Top Navigation */}
-      <nav className="fixed top-3 sm:top-6 left-2 right-2 sm:left-0 sm:right-0 z-50 bg-white/90 backdrop-blur-xl shadow-md border border-slate-200/50 rounded-full mx-auto max-w-6xl px-1 sm:px-2">
+      <nav className="fixed top-3 sm:top-6 left-2 right-2 sm:left-0 sm:right-0 z-50 bg-[#0e2434]/80 backdrop-blur-xl shadow-md border border-white/10 rounded-full mx-auto max-w-6xl px-1 sm:px-2">
         <div className="flex justify-between items-center px-4 sm:px-6 py-2 sm:py-3">
           <div
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -285,537 +462,645 @@ export default function Home() {
             />
           </div>
           <div className="hidden lg:flex items-center gap-10">
-            <a className={`pb-1 font-headline text-sm transition-all ${activeSection === 'values' ? 'text-primary font-bold border-b-[3px] border-primary' : 'text-slate-500 font-semibold hover:text-slate-900 border-b-[3px] border-transparent'}`} href="#values">Giá trị</a>
-            <a className={`pb-1 font-headline text-sm transition-all ${activeSection === 'speakers' ? 'text-primary font-bold border-b-[3px] border-primary' : 'text-slate-500 font-semibold hover:text-slate-900 border-b-[3px] border-transparent'}`} href="#speakers">Diễn giả</a>
-            <a className={`pb-1 font-headline text-sm transition-all ${activeSection === 'register' ? 'text-primary font-bold border-b-[3px] border-primary' : 'text-slate-500 font-semibold hover:text-slate-900 border-b-[3px] border-transparent'}`} href="#register">Thời gian</a>
+            <a className={`pb-1 font-headline text-sm transition-all ${activeSection === 'skills' ? 'text-[#3b82f6] font-bold border-b-[3px] border-[#3b82f6]' : 'text-slate-300 font-semibold hover:text-white border-b-[3px] border-transparent'}`} href="#skills">Kỹ năng</a>
+            <a className={`pb-1 font-headline text-sm transition-all ${activeSection === 'timeline' ? 'text-[#3b82f6] font-bold border-b-[3px] border-[#3b82f6]' : 'text-slate-300 font-semibold hover:text-white border-b-[3px] border-transparent'}`} href="#timeline">Lộ trình</a>
+            <a className={`pb-1 font-headline text-sm transition-all ${activeSection === 'speakers' ? 'text-[#3b82f6] font-bold border-b-[3px] border-[#3b82f6]' : 'text-slate-300 font-semibold hover:text-white border-b-[3px] border-transparent'}`} href="#speakers">Diễn giả</a>
           </div>
           <a
             href="#register"
-            className="bg-primary text-white px-4 sm:px-8 py-2 sm:py-2.5 rounded-full font-headline font-bold text-[10px] sm:text-sm shadow-lg shadow-primary/30 hover:scale-105 transition-all active:scale-95 uppercase tracking-wider"
+            className="px-4 sm:px-8 py-2 sm:py-2.5 rounded-full font-headline font-bold text-[10px] sm:text-sm shadow-lg hover:scale-105 transition-all active:scale-95 uppercase tracking-wider bg-gradient-to-r from-[#3b82f6] to-[#38bdf8] text-[#0e2434]"
           >
             Đăng ký Ngay
           </a>
         </div>
       </nav>
 
-      <div className="">
-        {/* Hero Section */}
-        <section className="relative min-h-screen lg:min-h-[921px] flex flex-col items-center justify-center overflow-hidden pt-32 sm:pt-40 pb-20 sm:pb-32">
-          {/* Background Atmospheric Effect */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
-            {/* Animated Floating Blobs */}
-            <motion.div
-              animate={{ y: [0, -30, 0], x: [0, 15, 0], scale: [1, 1.05, 1] }}
-              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-container/30 rounded-full blur-[120px] mix-blend-multiply"
-            />
-            <motion.div
-              animate={{ y: [0, 25, 0], x: [0, -20, 0], scale: [1, 1.08, 1] }}
-              transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-              className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-tertiary-container/20 rounded-full blur-[120px] mix-blend-multiply"
-            />
-            <motion.div
-              animate={{ y: [0, 20, 0], scale: [1, 1.1, 1] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-300/10 rounded-full blur-[100px] mix-blend-multiply"
-            />
-          </div>
-
-          <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-            {/* Workshop Badge */}
-            <motion.div
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center mb-8"
-            >
-              <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-lg shadow-primary/10"
-              >
-                <motion.span
-                  animate={{ rotate: [0, 20, -20, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                  className="material-symbols-outlined text-base"
-                >auto_awesome</motion.span>
-                <span className="text-xs font-bold uppercase tracking-widest font-headline">AI WORKSHOP SERIES</span>
-              </motion.div>
-            </motion.div>
-
-            <motion.h1
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-headline font-extrabold text-on-background tracking-tight leading-tight mb-8 text-center flex flex-col items-center justify-center gap-y-0 sm:gap-y-2"
-            >
-              <span className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-4">
-                <span className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-tertiary">
-                  Buổi 3:
-                </span>
-                <span className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-red-600 font-black">
-                  8 Tiếng Còn 3 Nhờ
-                </span>
-              </span>
-              <span className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-red-600 font-black">
-                Claude & NotebookLM
-              </span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg md:text-xl text-on-surface-variant max-w-3xl mx-auto mb-12 leading-relaxed"
-            >
-              Khám phá cách sử dụng <strong className="text-primary">Claude AI</strong> và <strong className="text-tertiary">NotebookLM</strong> để tối ưu hóa quy trình làm việc, biến <strong className="text-tertiary">8 tiếng làm việc</strong> thành <strong className="text-primary">3 tiếng hiệu quả</strong>. Trải nghiệm thực hành trực tiếp giúp bạn áp dụng ngay vào công việc!
-            </motion.p>
-
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col items-center justify-center gap-6"
-            >
-              <div className="flex flex-col items-center gap-5">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="px-8 sm:px-12 py-4 sm:py-5 bg-primary text-white rounded-full font-black text-lg sm:text-xl shadow-2xl shadow-primary/40 flex items-center gap-3 group transition-all"
-                >
-                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">send</span>
-                  ĐĂNG KÝ THAM GIA
-                </motion.button>
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: 0.8,
-                    duration: 0.5
-                  }}
-                  className="mt-4 flex items-center gap-2 sm:gap-4 px-4 py-3 sm:px-12 sm:py-5 rounded-xl sm:rounded-[2.5rem] bg-white border-2 border-red-100 shadow-2xl shadow-red-600/20"
-                >
-                  <span className="material-symbols-outlined text-[20px] sm:text-[32px] text-red-600">verified</span>
-                  <span className="font-headline font-black text-sm sm:text-3xl uppercase tracking-widest italic text-red-600">
-                    100% Offline thực hành
-                  </span>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Values Section - 3 Core Benefits */}
-        <section id="values" className="bg-white/80 backdrop-blur-md py-24 px-8 relative overflow-hidden scroll-mt-32">
+      {/* Hero Section */}
+      <section className="relative bg-[#0f2634] text-white pt-36 pb-20 px-6 overflow-hidden flex flex-col items-center justify-center text-center">
+        {/* Atmospheric Orbs */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <motion.div
-            initial={{ y: 40, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="max-w-7xl mx-auto"
+            animate={{ y: [0, -20, 0], scale: [1, 1.05, 1] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute -top-40 -left-40 w-96 h-96 bg-[#3b82f6]/15 rounded-full blur-[120px]"
+          />
+          <motion.div
+            animate={{ y: [0, 20, 0], scale: [1, 1.05, 1] }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+            className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#38bdf8]/10 rounded-full blur-[120px]"
+          />
+        </div>
+
+        <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="text-xs sm:text-sm font-black tracking-widest text-[#3b82f6] uppercase mb-4"
           >
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full mb-4">
-                <span className="material-symbols-outlined text-sm">star</span>
-                <span className="text-xs font-bold uppercase tracking-widest font-headline">3 LỢI ÍCH CỐT LÕI</span>
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-black font-headline tracking-tight mb-4 text-red-600">
-                Làm chủ Claude AI, NotebookLM &amp; Tối ưu hiệu suất
-              </h2>
-              <p className="max-w-2xl mx-auto text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-tertiary to-primary animate-gradient-x">
-                Học đi đôi với hành — kết quả thực tế ngay tại buổi chia sẻ.
-              </p>
+            Khóa học từ cơ bản đến chuyên sâu
+          </motion.div>
+
+          <motion.h1
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-black font-headline tracking-tight leading-none mb-6"
+          >
+            Làm chủ <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3b82f6] to-[#38bdf8]">Claude AI</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-lg sm:text-2xl text-slate-300 font-medium font-headline tracking-wide max-w-2xl mb-8 leading-relaxed italic"
+          >
+            Xây dựng trợ lý phòng ban tự động làm việc
+          </motion.p>
+
+
+
+          {/* Meta tags */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex items-center justify-center gap-6 text-sm text-slate-300 font-bold mb-12"
+          >
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-cyan-400 text-lg">calendar_month</span>
+              <span className="text-slate-300">{eventDate}</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Benefit 1 */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="group relative bg-surface-container-lowest p-8 rounded-3xl shadow-[0_20px_40px_rgba(0,83,204,0.06)] flex flex-col items-start transition-all duration-300 hover:-translate-y-2 border border-primary/10 overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-white flex items-center justify-center mb-6 shadow-lg shadow-primary/30">
-                  <span className="material-symbols-outlined text-3xl">timer</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold mb-4 uppercase tracking-wider">
-                  <span>Lợi ích 1</span>
-                </div>
-                <h3 className="text-xl font-black font-headline mb-3 text-on-surface leading-tight">Tiết kiệm 60% thời gian làm việc</h3>
-                <p className="text-on-surface-variant leading-relaxed text-sm">Cắt giảm thời gian xử lý task từ 8 tiếng xuống còn <strong className="text-on-surface">3 tiếng</strong> nhờ tốc độ siêu tốc của Claude, giải phóng 5 giờ mỗi ngày cho bạn.</p>
-              </motion.div>
+            <span className="hidden sm:inline-block h-4 border-l border-slate-600" />
 
-              {/* Benefit 2 */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="group relative bg-surface-container-lowest p-8 rounded-3xl shadow-[0_20px_40px_rgba(103,80,164,0.06)] flex flex-col items-start transition-all duration-300 hover:-translate-y-2 border border-tertiary/10 overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-tertiary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-tertiary to-tertiary/70 text-white flex items-center justify-center mb-6 shadow-lg shadow-tertiary/30">
-                  <span className="material-symbols-outlined text-3xl">trending_up</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-tertiary/10 text-tertiary rounded-full text-xs font-bold mb-4 uppercase tracking-wider">
-                  <span>Lợi ích 2</span>
-                </div>
-                <h3 className="text-xl font-black font-headline mb-3 text-on-surface leading-tight">Xây dựng &quot;Bộ não thứ 2&quot; cho doanh nghiệp</h3>
-                <p className="text-on-surface-variant leading-relaxed text-sm">Quản lý <strong className="text-on-surface">hàng ngàn tài liệu</strong> với <strong className="text-on-surface">độ chính xác 100%</strong>, trích dẫn nguồn ngay lập tức, loại bỏ hoàn toàn tình trạng AI <strong className="text-on-surface">&quot;ảo tưởng&quot;</strong> thông tin.</p>
-              </motion.div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-pink-500 text-lg">place</span>
+              <span className="text-slate-300">{eventAddress}</span>
+            </div>
 
-              {/* Benefit 3 */}
-              <motion.div
-                initial={{ y: 30, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-                className="group relative bg-surface-container-lowest p-8 rounded-3xl shadow-[0_20px_40px_rgba(16,185,129,0.06)] flex flex-col items-start transition-all duration-300 hover:-translate-y-2 border border-emerald-500/10 overflow-hidden"
+
+          </motion.div>
+
+          {/* Prominent badges: 01 ngày offline / 03 ngày online / Học lại trọn đời (moved below meta) */}
+          <div className="flex items-center justify-center gap-4 mb-6">
+            {['01 ngày offline thực hành', '03 ngày online hỗ trợ', 'Học lại trọn đời'].map((t, i) => (
+              <div
+                key={i}
+                className="px-4 py-2 rounded-full text-white glow-white font-black text-sm sm:text-base bg-white/5 border border-white/10"
+                style={{
+                  textShadow: '0 0 18px rgba(255,255,255,0.15)',
+                  boxShadow: '0 8px 30px rgba(59, 130, 246,0.04)'
+                }}
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-400 text-white flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/30">
-                  <span className="material-symbols-outlined text-3xl">settings_account_box</span>
+                {t}
+              </div>
+            ))}
+          </div>
+
+          {/* Countdown area */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col items-center w-full"
+          >
+            <p className="text-[10px] sm:text-xs font-black tracking-widest text-cyan-400 uppercase mb-4">KHAI GIẢNG SAU</p>
+            <div className="flex items-center gap-2 sm:gap-4 select-none">
+              {/* Days */}
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900/60 border border-slate-700/50 rounded-2xl flex items-center justify-center shadow-xl">
+                  <span className="text-2xl sm:text-4xl font-black text-white glow-white font-headline">
+                    {mounted ? String(timeLeft.days).padStart(2, '0') : '00'}
+                  </span>
                 </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold mb-4 uppercase tracking-wider">
-                  <span>Lợi ích 3</span>
+                <span className="text-[10px] sm:text-xs font-bold text-slate-400 mt-2 uppercase tracking-wider">Ngày</span>
+              </div>
+
+              <span className="text-xl sm:text-2xl font-black text-slate-500 -mt-6">:</span>
+
+              {/* Hours */}
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900/60 border border-slate-700/50 rounded-2xl flex items-center justify-center shadow-xl">
+                  <span className="text-2xl sm:text-4xl font-black text-white glow-white font-headline">
+                    {mounted ? String(timeLeft.hours).padStart(2, '0') : '00'}
+                  </span>
                 </div>
-                <h3 className="text-xl font-black font-headline mb-3 text-on-surface leading-tight">Chuẩn hóa 100% quy trình cốt lõi</h3>
-                <p className="text-on-surface-variant leading-relaxed text-sm">Tự động hóa hoàn toàn các tác vụ lặp đi lặp lại và xây dựng SOP chuẩn chỉnh, giúp <strong className="text-on-surface">giảm 80% áp lực</strong> vận hành công việc hàng ngày.</p>
-              </motion.div>
+                <span className="text-[10px] sm:text-xs font-bold text-slate-400 mt-2 uppercase tracking-wider">Giờ</span>
+              </div>
+
+              <span className="text-xl sm:text-2xl font-black text-slate-500 -mt-6">:</span>
+
+              {/* Minutes */}
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900/60 border border-slate-700/50 rounded-2xl flex items-center justify-center shadow-xl">
+                  <span className="text-2xl sm:text-4xl font-black text-white glow-white font-headline">
+                    {mounted ? String(timeLeft.minutes).padStart(2, '0') : '00'}
+                  </span>
+                </div>
+                <span className="text-[10px] sm:text-xs font-bold text-slate-400 mt-2 uppercase tracking-wider">Phút</span>
+              </div>
+
+              <span className="text-xl sm:text-2xl font-black text-slate-500 -mt-6">:</span>
+
+              {/* Seconds */}
+              <div className="flex flex-col items-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900/60 border border-slate-700/50 rounded-2xl flex items-center justify-center shadow-xl">
+                  <span className="text-2xl sm:text-4xl font-black text-white glow-white font-headline text-cyan-400">
+                    {mounted ? String(timeLeft.seconds).padStart(2, '0') : '00'}
+                  </span>
+                </div>
+                <span className="text-[10px] sm:text-xs font-bold text-slate-400 mt-2 uppercase tracking-wider">Giây</span>
+              </div>
             </div>
           </motion.div>
-        </section>
 
-        {/* Speakers Section */}
-        <section id="speakers" className="py-24 px-8 max-w-7xl mx-auto scroll-mt-40 bg-white/40 backdrop-blur-sm rounded-[4rem] my-24 border border-white/20">
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-base sm:text-lg text-slate-300 max-w-3xl mx-auto mt-16 leading-relaxed font-normal text-center font-headline"
+          >
+            Chương trình được thiết kế với các module từ cơ bản đến chuyên sâu giúp bạn làm chủ hoàn toàn <span className="text-white font-bold">CLAUDE AI</span>, từ xây dựng tư duy đúng khi sử dụng AI <span className="text-[#3b82f6] font-semibold">(mindset-skillset-toolset)</span>, sử dụng thành thạo từng module đến áp dụng thực tế vào chính doanh nghiệp của bạn, giúp tối ưu vận hành và chi phí.
+          </motion.p>
+        </div>
+      </section>
+
+      {/* Skills Section */}
+      <section id="skills" className="bg-[#11283c] py-24 px-6 md:px-8 relative overflow-hidden scroll-mt-32">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-black tracking-widest text-[#3b82f6] uppercase">KỸ NĂNG BẠN SẼ CÓ</span>
+            <h2 className="text-3xl sm:text-5xl font-black font-headline text-white glow-white mt-2">Kết thúc khóa học, bạn sở hữu ngay</h2>
+          </div>
+
+          {/* Top Grid: 3 cards (Cowork spans 2) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            {/* Card 1: Claude Cowork (Highlighted, dark teal bg) */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ y: -5 }}
+              className="lg:col-span-2 bg-gradient-to-br from-[#3b82f6]/20 to-[#38bdf8]/10 text-white glow-white p-8 rounded-3xl shadow-xl flex flex-col justify-between border border-[#3b82f6]/30 transition-all relative overflow-hidden group min-h-[260px] text-left"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl group-hover:scale-110 transition-transform"></div>
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white glow-white text-2xl font-bold">groups</span>
+                </div>
+                <span className="px-3 py-1 bg-red-500 text-white text-[10px] font-black uppercase rounded-full tracking-wider">ĐẶC BIỆT</span>
+              </div>
+              <div>
+                <h3 className="text-2xl font-black font-headline mb-3 text-white glow-white">Claude Cowork</h3>
+                <p className="text-blue-100 text-sm leading-relaxed font-medium mb-6">
+                  Cowork là cả một phòng ban AI trong lòng bàn tay - mỗi agent đảm nhận một vai trò, tự vận hành, tự phối hợp với nhau, và giao cho bạn kết quả cuối cùng như một đội ngũ thực thụ.
+                </p>
+              </div>
+              <div
+                onClick={() => {
+                  setSelectedPackage('Nhóm 2 người');
+                  document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="flex items-center gap-2 text-cyan-300 font-bold text-sm cursor-pointer group-hover:gap-3 transition-all"
+              >
+                <span>Thiết lập nhóm làm việc</span>
+                <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+              </div>
+            </motion.div>
+
+            {/* Card 2: Claude Skills */}
+            <SkillCard
+              icon="psychology"
+              iconColor="text-indigo-600"
+              iconBg="bg-indigo-100"
+              title="Claude Skills"
+              description="Biến mỗi nhân sự hoặc quy trình công ty thành Skill cố định - gọi một lúc nhiều Skills, Claude tự xử lý đa nhiệm mà không cần ra lệnh lại."
+            />
+
+            {/* Card 3: Claude Projects */}
+            <SkillCard
+              icon="folder_open"
+              iconColor="text-blue-600"
+              iconBg="bg-blue-100"
+              title="Claude Projects"
+              description="Giao việc cho đúng người, giúp bạn tạo ra những 'chuyên gia ảo' theo từng lĩnh vực, luôn hiểu đúng context và làm việc theo chuẩn của bạn."
+            />
+          </div>
+
+          {/* Bottom Grid: 5 cards on 1 row on desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {/* Card 4: Claude Connectors */}
+            <SkillCard
+              icon="hub"
+              iconColor="text-blue-600"
+              iconBg="bg-blue-100"
+              title="Claude Connectors"
+              description="Chìa khóa để Claude kết nối với hệ thống công việc như Gmail, Google Drive, Calendar... để xây dựng các trợ lý tự động."
+            />
+
+            {/* Card 5: Claude Artifacts */}
+            <SkillCard
+              icon="layers"
+              iconColor="text-orange-600"
+              iconBg="bg-orange-100"
+              title="Claude Artifacts"
+              description="Xây luôn cho bạn một app, website, landingpage hay công cụ tương tác ngay trong khung chat, không cần code."
+            />
+
+            {/* Card 6: Claude + Canva */}
+            <SkillCard
+              icon="draw"
+              iconColor="text-purple-600"
+              iconBg="bg-purple-100"
+              title="Claude + Canva"
+              description="Hai công cụ kết hợp liền mạch để biến ý tưởng thiết kế của bạn thành ấn phẩm hoàn chỉnh."
+            />
+
+            {/* Card 7: Claude + NotebookLM */}
+            <SkillCard
+              icon="auto_stories"
+              iconColor="text-cyan-600"
+              iconBg="bg-cyan-100"
+              title="Claude + NotebookLM"
+              description="NotebookLM kéo toàn bộ dữ liệu từ thế giới bên ngoài, Claude đào sâu vào kho tài liệu - hai công cụ kết hợp cho ra insight toàn diện mà một mình không AI nào làm được."
+            />
+
+            {/* Card 8: 10 Mẹo tối ưu Token */}
+            <SkillCard
+              icon="token"
+              iconColor="text-amber-600"
+              iconBg="bg-amber-100"
+              title="10 Mẹo tối ưu Token"
+              description="Các kỹ thuật tối ưu hóa chi phí khi sử dụng API Claude mà vẫn giữ nguyên chất lượng."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Timeline Section */}
+      <section id="timeline" className="bg-[#0e2434] py-24 px-6 md:px-8 relative overflow-hidden scroll-mt-32">
+        <div className="max-w-4xl mx-auto">
           <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
             className="text-center mb-16"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full mb-4">
-              <span className="material-symbols-outlined text-sm">mic</span>
-              <span className="text-xs font-bold uppercase tracking-widest font-headline">DIỄN GIẢ CHƯƠNG TRÌNH</span>
-            </div>
+            <span className="text-xs font-black tracking-widest text-[#3b82f6] uppercase">Nội dung chương trình</span>
+            <h2 className="text-3xl sm:text-5xl font-black font-headline text-white glow-white mt-2">1 ngày - 7 module thực chiến</h2>
           </motion.div>
 
-          <motion.div
-            initial={{ scale: 0.98, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="bg-surface-container-low rounded-[3rem] p-8 lg:p-12 border border-outline-variant/10 shadow-sm overflow-hidden relative"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div className="flex flex-col lg:flex-row items-center gap-12 relative z-10">
-              <div className="w-full lg:w-2/5 flex justify-center">
-                <div className="relative group">
-                  <div className="absolute -inset-4 bg-gradient-to-tr from-primary to-tertiary rounded-full opacity-20 blur-2xl group-hover:opacity-30 transition-opacity"></div>
-                  <div className="w-72 h-72 lg:w-80 lg:h-80 rounded-full overflow-hidden border-8 border-white shadow-xl relative">
-                    <Image
-                      src="/dien-gia.jpg"
-                      alt="Lê Thanh Hải - CEO AIZEN"
-                      fill
-                      className="object-cover"
-                      priority
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+          <div className="relative border-l-2 border-[#3b82f6]/20 ml-4 md:ml-32 pl-8 space-y-12 py-4">
+            {timelineData.map((item, index) => {
+              const isActive = index === 0;
+              const isCompleted = index === timelineData.length - 1;
+
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ duration: 0.5, delay: index * 0.05 }}
+                  className="relative text-left"
+                >
+                  {/* Time indicator for medium screens */}
+                  <div className="hidden md:block absolute -left-40 top-1.5 w-24 text-right pr-4">
+                    <span className={`text-base font-black font-headline ${isActive ? 'text-[#1a7a5e]' : 'text-slate-400'}`}>
+                      {item.time}
+                    </span>
                   </div>
-                </div>
-              </div>
-              <div className="w-full lg:w-3/5">
-                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black font-headline mb-2 text-on-surface tracking-tighter">Lê Thanh Hải</h3>
-                <p className="text-lg sm:text-xl font-bold text-primary font-headline mb-6">CEO AIZEN</p>
-                <div className="w-16 h-1.5 bg-gradient-to-r from-primary to-tertiary rounded-full mb-8"></div>
-                <p className="text-lg text-on-surface-variant leading-relaxed">
-                  Chuyên gia với <span className="text-on-surface font-bold">hơn 15 năm kinh nghiệm thực chiến</span> trong ngành Công nghệ thông tin. Anh trực tiếp dẫn dắt lộ trình đưa AI vào vận hành, giúp doanh nghiệp đóng gói quy trình, tối ưu hiệu suất và bứt phá doanh thu từ những trải nghiệm và ứng dụng thực tế nhất.
-                </p>
-                <div className="mt-8 flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white border border-outline-variant/20 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
-                    <span className="material-symbols-outlined text-xl">share</span>
+
+                  {/* Circle marker on the line */}
+                  <div className="absolute -left-[41px] top-1.5 flex items-center justify-center">
+                    {isActive ? (
+                      <div className="w-6 h-6 rounded-full bg-[#1a7a5e] border-4 border-white flex items-center justify-center shadow-lg">
+                        <span className="material-symbols-outlined text-white glow-white text-[12px] font-black">add</span>
+                      </div>
+                    ) : isCompleted ? (
+                      <div className="w-6 h-6 rounded-full bg-[#1a7a5e] border-4 border-white flex items-center justify-center shadow-lg">
+                        <span className="material-symbols-outlined text-white glow-white text-[12px] font-black">check</span>
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-[#13283e] border-4 border-white/8 flex items-center justify-center shadow-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                      </div>
+                    )}
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-white border border-outline-variant/20 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
-                    <span className="material-symbols-outlined text-xl">mail</span>
+
+                  {/* Card */}
+                  <div className={`p-6 rounded-2xl border transition-all ${isActive
+                    ? 'bg-[#3b82f6]/10 border-[#3b82f6]/40 shadow-md shadow-[#3b82f6]/6'
+                    : isCompleted
+                      ? 'bg-white/4 border-[#3b82f6]/15'
+                      : 'bg-[#13283e] border-white/8 hover:shadow-md'
+                    }`}>
+                    {/* Mobile Time */}
+                    <div className="md:hidden mb-2">
+                      <span className={`text-sm font-black font-headline ${isActive ? 'text-[#1a7a5e]' : 'text-slate-500'}`}>
+                        {item.time}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div>
+                        <h3 className={`text-lg font-black font-headline ${isActive ? 'text-[#3b82f6]' : 'text-white'}`}>
+                          {item.title}
+                        </h3>
+                        <p className="text-white glow-white text-sm font-normal mt-1 leading-relaxed">{item.description}</p>
+                      </div>
+                      <div className="shrink-0 flex items-start">
+                        <span className={`px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${isCompleted
+                          ? 'bg-blue-100 text-blue-700'
+                          : isActive
+                            ? 'bg-[#1a7a5e] text-white'
+                            : 'bg-slate-100 text-slate-500'
+                          }`}>
+                          {item.badge}
+                        </span>
+                      </div>
+                    </div>
                   </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+
+      {/* Speakers Section */}
+      <section id="speakers" className="py-24 px-8 max-w-7xl mx-auto scroll-mt-40 bg-[#0e2434]/80 backdrop-blur-sm rounded-[4rem] my-24 border border-white/10">
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          className="text-center mb-16"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#3b82f6]/10 text-[#3b82f6] rounded-full mb-4">
+            <span className="material-symbols-outlined text-sm">mic</span>
+            <span className="text-xs font-bold uppercase tracking-widest font-headline">DIỄN GIẢ CHƯƠNG TRÌNH</span>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ scale: 0.98, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          className="bg-[#11283c] rounded-[3rem] p-8 lg:p-12 border border-white/10 shadow-sm overflow-hidden relative"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#3b82f6]/8 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="flex flex-col lg:flex-row items-center gap-12 relative z-10">
+            <div className="w-full lg:w-2/5 flex justify-center">
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-gradient-to-tr from-primary to-tertiary rounded-full opacity-20 blur-2xl group-hover:opacity-30 transition-opacity"></div>
+                <div className="w-72 h-72 lg:w-80 lg:h-80 rounded-full overflow-hidden border-8 border-white shadow-xl relative">
+                  <Image
+                    src="/dien-gia.jpg"
+                    alt="Lê Thanh Hải - CEO AIZEN"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                 </div>
               </div>
             </div>
-          </motion.div>
-        </section>
-
-        {/* Form & Details Section */}
-        <section id="register" className="py-24 px-8 max-w-7xl mx-auto relative mb-12 scroll-mt-40">
-          <div className="editorial-grid">
-            <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              viewport={{ once: true }}
-              className="col-span-12 lg:col-span-7 order-2 lg:order-1"
-            >
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10 shadow-sm">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
-                      <span className="material-symbols-outlined">calendar_month</span>
-                    </div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Thời gian</p>
-                    <p className="font-bold text-on-surface">Thứ Bảy, 06/06/2026</p>
-                    <p className="text-sm text-on-surface-variant mb-2">08:30 - 11:30</p>
-                    <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-600 rounded-md border border-red-100">
-                      <span className="material-symbols-outlined text-[14px]">warning</span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider">Hạn chót Đăng Ký: 03/06</span>
-                    </div>
-                  </div>
-                  <motion.a
-                    href="https://maps.app.goo.gl/b1KLmyfsSRXJrSfD9"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{ y: -5 }}
-                    className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10 shadow-sm hover:border-primary/40 hover:shadow-xl transition-all group relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                      <span className="material-symbols-outlined text-6xl rotate-12">map</span>
-                    </div>
-
-                    <div className="relative mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
-                        <span className="material-symbols-outlined">location_on</span>
-                      </div>
-                      <div className="absolute inset-0 bg-tertiary/20 rounded-xl animate-ping opacity-40"></div>
-                    </div>
-
-                    <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Địa điểm</p>
-                    <p className="font-bold text-on-surface mb-1">11 Nguyễn Đình Chiểu, P. Đa Kao, TPHCM</p>
-                    <p className="text-[10px] leading-tight text-on-surface-variant mb-2">(Trung tâm Đào tạo Bưu chính Viễn thông PTTC - Học viện PTIT)</p>
-                    <div className="flex items-center gap-2 text-sm font-bold text-primary group-hover:gap-3 transition-all">
-                      <span>Xem trên bản đồ</span>
-                      <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                    </div>
-                  </motion.a>
-                  <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10 shadow-sm">
-                    <div className="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-4">
-                      <span className="material-symbols-outlined">laptop_mac</span>
-                    </div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Yêu cầu</p>
-                    <p className="font-bold text-on-surface">Thiết bị cá nhân</p>
-                    <p className="text-sm text-on-surface-variant">Mang theo Laptop cá nhân</p>
-                  </div>
-                  <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/10 shadow-sm">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
-                      <span className="material-symbols-outlined">payments</span>
-                    </div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Chi phí</p>
-                    <p className="font-bold text-on-surface">150.000 VND</p>
-                    <p className="text-sm text-on-surface-variant">Phí giữ chỗ &amp; Tea-break</p>
-                  </div>
+            <div className="w-full lg:w-3/5 text-left">
+              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black font-headline mb-2 text-white tracking-tighter">Lê Thanh Hải</h3>
+              <p className="text-lg sm:text-xl font-bold text-[#3b82f6] font-headline mb-6">CEO AIZEN</p>
+              <div className="w-16 h-1.5 bg-gradient-to-r from-[#3b82f6] to-[#38bdf8] rounded-full mb-8"></div>
+              <p className="text-lg text-white/80 leading-relaxed">
+                Chuyên gia với <span className="text-white font-bold">hơn 15 năm kinh nghiệm thực chiến</span> trong ngành Công nghệ thông tin. Anh trực tiếp dẫn dắt lộ trình đưa AI vào vận hành, giúp doanh nghiệp đóng gói quy trình, tối ưu hiệu suất và bứt phá doanh thu từ những trải nghiệm và ứng dụng thực tế nhất.
+              </p>
+              <div className="mt-8 flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-white/8 border border-white/15 flex items-center justify-center text-slate-300 hover:text-[#3b82f6] transition-colors cursor-pointer">
+                  <span className="material-symbols-outlined text-xl">share</span>
                 </div>
-
-                <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/10 shadow-sm">
-                  <div className="flex flex-col md:flex-row gap-8 items-center">
-                    <div className="w-full md:w-2/5">
-                      <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-tertiary/30 rounded-2xl blur opacity-30"></div>
-                        <div className="relative bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
-                          <Image
-                            src="/qr_v1.jpg"
-                            alt="QR thanh toán"
-                            width={300}
-                            height={300}
-                            className="w-full h-auto rounded-xl"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="w-full md:w-3/5">
-                      <h3 className="text-xl font-black font-headline mb-4">Thông tin chuyển khoản</h3>
-                      <div className="space-y-2 text-sm text-on-surface-variant">
-                        <p><span className="font-bold text-on-surface">Ngân hàng:</span> TPBank</p>
-                        <p><span className="font-bold text-on-surface">Chủ tài khoản:</span> NGUYEN HOANG MINH</p>
-                        <p><span className="font-bold text-on-surface">Số tài khoản:</span> <span className="text-primary font-bold">0000 5895 437</span></p>
-                        <p><span className="font-bold text-on-surface">Nội dung:</span> Workshop3 [Họ Tên] [SĐT]</p>
-                      </div>
-                    </div>
-                  </div>
+                <div className="w-10 h-10 rounded-full bg-white/8 border border-white/15 flex items-center justify-center text-slate-300 hover:text-[#3b82f6] transition-colors cursor-pointer">
+                  <span className="material-symbols-outlined text-xl">mail</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
 
+      {/* Pricing / Register Section */}
+      <section id="register" className="py-24 px-6 md:px-8 scroll-mt-32">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-4">
+            <span className="text-xs font-black tracking-widest text-[#3b82f6] uppercase">Đăng ký</span>
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-black font-headline text-white text-center mb-4">
+            Chọn hình thức đăng ký
+          </h2>
+          <p className="text-center text-slate-400 mb-12 text-sm">
+            Mỗi gói đều bao gồm tài liệu PDF · chứng chỉ hoàn thành · group hỗ trợ sau khoá
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+
+            {/* Card 1: Early Bird */}
             <motion.div
-              initial={{ y: 50, opacity: 0 }}
+              initial={{ y: 30, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
-              className="col-span-12 lg:col-span-5 order-1 lg:order-2 lg:pl-16"
+              transition={{ delay: 0 }}
+              className="relative flex flex-col bg-[#13283e]/40 border border-slate-800 rounded-3xl p-6 shadow-lg opacity-50 grayscale transition-all select-none"
             >
-              <div className="bg-surface-container-lowest p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.05)] border border-outline-variant/10">
-                <h3 className="text-red-600 font-black font-headline text-lg sm:text-xl lg:text-2xl mb-3 tracking-tight uppercase italic text-center lg:text-left">BUỔI 3: 8 TIẾNG CÒN 3 - NHỜ CLAUDE & NOTEBOOKLM</h3>
-                <h2 className="text-2xl sm:text-3xl font-black font-headline mb-2 tracking-tight text-center lg:text-left">Đăng ký tham gia ngay</h2>
-                <p className="text-sm text-on-surface-variant mb-6 sm:mb-8 text-center lg:text-left">Hoàn thành thông tin bên dưới để giữ chỗ.</p>
-                <form action={handleAction} className="space-y-6">
-                  {/* Honeypot field - Hidden from users, only visible to spam bots */}
-                  <div className="hidden" aria-hidden="true">
-                    <input type="text" name="website" tabIndex={-1} autoComplete="off" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-on-surface-variant font-headline ml-1 uppercase" htmlFor="fullname">Họ và tên</label>
-                    <input id="fullname" name="fullname" className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all outline-none text-on-surface" placeholder="Nhập họ và tên của bạn" type="text" required />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-on-surface-variant font-headline ml-1 uppercase" htmlFor="phone">Số điện thoại</label>
-                    <input id="phone" name="phone" className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all outline-none text-on-surface" placeholder="09xx xxx xxx" type="tel" pattern="^(0|84)(3|5|7|8|9|1[2689])([0-9]{8})$" title="Vui lòng nhập số điện thoại Việt Nam hợp lệ (10 số)" required />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-on-surface-variant font-headline ml-1 uppercase" htmlFor="email">Email công việc</label>
-                    <input id="email" name="email" className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all outline-none text-on-surface" placeholder="name@company.com" type="email" required />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-on-surface-variant font-headline ml-1 uppercase" htmlFor="company">Tên công ty</label>
-                    <input id="company" name="company" className="w-full px-5 py-4 bg-surface-container-low border-none rounded-2xl focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all outline-none text-on-surface" placeholder="Nhập tên công ty của bạn" type="text" required />
-                  </div>
-
-                  <CustomSelect
-                    label="Bạn biết đến sự kiện từ đâu?"
-                    name="referral"
-                    icon="group"
-                    placeholder="Chọn nguồn tin"
-                    options={[
-                      "Cộng Đồng AI ỨNG DỤNG SALE & MARKETING",
-                      "Khách hàng AIZEN",
-                      "Người quen giới thiệu",
-                      "Khác"
-                    ]}
-                    required
-                  />
-
-                  <CustomSelect
-                    label="Bạn là?"
-                    name="role"
-                    icon="work"
-                    placeholder="Chọn vị trí của bạn"
-                    options={[
-                      "Chủ doanh nghiệp",
-                      "Quản lý phòng ban",
-                      "Nhân viên",
-                      "Sinh viên",
-                      "Khác"
-                    ]}
-                    required
-                  />
-
-                  <div className="pt-4">
-                    <button
-                      type="submit"
-                      disabled={formState === 'loading'}
-                      className="w-full bg-primary text-white py-5 rounded-2xl font-headline font-black text-lg shadow-xl shadow-primary/30 hover:bg-primary-dim hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      {formState === 'loading' ? (
-                        <>
-                          <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          Đang xử lý...
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-symbols-outlined">send</span>
-                          Gửi thông tin đăng ký
-                        </>
-                      )}
-                    </button>
-                    <p className="text-xs text-on-surface-variant text-center mt-4">
-                      Cam kết bảo mật thông tin theo chính sách quyền riêng tư của Workshop.
-                    </p>
-                  </div>
-                </form>
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="px-3 py-1 bg-slate-800 text-slate-400 text-[10px] font-black uppercase tracking-wider rounded-full shadow border border-slate-700">Đã hết hạn</span>
               </div>
+              <div className="w-12 h-12 rounded-2xl bg-slate-800 text-slate-500 flex items-center justify-center mb-4 mt-2">
+                <span className="material-symbols-outlined text-2xl">bolt</span>
+              </div>
+              <p className="font-black text-slate-400 text-lg font-headline">Early Bird</p>
+              <p className="text-slate-500 text-xs mb-4">1 người · Đã kết thúc</p>
+              <div className="mb-1">
+                <span className="inline-block px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-black rounded-md uppercase tracking-wider">Hết hạn</span>
+              </div>
+              <p className="text-slate-500 line-through text-sm mb-1">1.200.000đ</p>
+              <p className="text-3xl font-black text-slate-400 font-headline mb-1">950.000đ</p>
+              <p className="text-slate-500 text-xs mb-6">Tổng: 950.000đ</p>
+              <button
+                type="button"
+                disabled
+                className="mt-auto w-full py-3 rounded-2xl bg-slate-800/80 border border-slate-700 text-slate-500 font-bold text-sm text-center cursor-not-allowed"
+              >
+                Đã hết hạn đăng ký
+              </button>
             </motion.div>
+
+            {/* Card 2: 1 người thường - MỚI */}
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.08 }}
+              className="relative flex flex-col bg-[#13283e] border border-white/10 rounded-3xl p-6 shadow-lg hover:shadow-blue-400/10 hover:-translate-y-1 transition-all"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-[#3b82f6]/15 text-[#3b82f6] flex items-center justify-center mb-4 mt-2">
+                <span className="material-symbols-outlined text-2xl">person</span>
+              </div>
+              <p className="font-black text-white text-lg font-headline">1 người</p>
+              <p className="text-slate-400 text-xs mb-4">Đăng ký cá nhân</p>
+              <div className="mb-1 h-6" />
+              <p className="text-slate-500 text-sm mb-1 invisible">–</p>
+              <p className="text-3xl font-black text-white font-headline mb-1">1.300.000đ</p>
+              <p className="text-slate-400 text-xs mb-6">Tổng: 1.300.000đ</p>
+              <button
+                type="button"
+                onClick={() => openRegModal('1 người')}
+                className="mt-auto w-full py-3 rounded-2xl bg-gradient-to-r from-[#3b82f6] to-[#38bdf8] text-[#0e2434] font-black text-sm text-center hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20 cursor-pointer"
+              >
+                Đăng ký ngay →
+              </button>
+            </motion.div>
+
+            {/* Card 3: Nhóm 2 người */}
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.16 }}
+              className="relative flex flex-col bg-[#0c1e33] border-2 border-[#3b82f6]/60 rounded-3xl p-6 shadow-xl shadow-blue-500/10 hover:-translate-y-1 transition-all"
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="px-3 py-1 bg-gradient-to-r from-[#3b82f6] to-[#38bdf8] text-[#0e2434] text-[10px] font-black uppercase tracking-wider rounded-full shadow">Hot nhất</span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-[#3b82f6]/15 text-[#3b82f6] flex items-center justify-center mb-4 mt-2">
+                <span className="material-symbols-outlined text-2xl">group</span>
+              </div>
+              <p className="font-black text-white text-lg font-headline">Nhóm 2 người</p>
+              <p className="text-slate-400 text-xs mb-4">Đăng ký cùng 1 người</p>
+              <div className="mb-1">
+                <span className="inline-block px-2 py-0.5 bg-[#3b82f6]/15 text-[#38bdf8] text-[10px] font-black rounded-md uppercase tracking-wider">Giảm 15%</span>
+              </div>
+              <p className="text-slate-500 line-through text-sm mb-1">1.300.000đ</p>
+              <p className="text-3xl font-black text-white font-headline mb-1">1.100.000đ</p>
+              <p className="text-slate-400 text-xs mb-6">Tổng nhóm: 2.200.000đ</p>
+              <button
+                type="button"
+                onClick={() => openRegModal('Nhóm 2 người')}
+                className="mt-auto w-full py-3 rounded-2xl bg-gradient-to-r from-[#3b82f6] to-[#38bdf8] text-[#0e2434] font-black text-sm text-center hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20 cursor-pointer"
+              >
+                Đăng ký ngay →
+              </button>
+            </motion.div>
+
+            {/* Card 4: Nhóm 4 người */}
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.24 }}
+              className="relative flex flex-col bg-[#13283e] border border-white/10 rounded-3xl p-6 shadow-lg hover:shadow-blue-400/10 hover:-translate-y-1 transition-all"
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="px-3 py-1 bg-white/10 text-slate-300 text-[10px] font-black uppercase tracking-wider rounded-full border border-white/15">Tiết kiệm</span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-slate-700/60 text-slate-300 flex items-center justify-center mb-4 mt-2">
+                <span className="material-symbols-outlined text-2xl">groups</span>
+              </div>
+              <p className="font-black text-white text-lg font-headline">Nhóm 4 người</p>
+              <p className="text-slate-400 text-xs mb-4">Đăng ký cùng 4 người</p>
+              <div className="mb-1">
+                <span className="inline-block px-2 py-0.5 bg-slate-700/60 text-slate-300 text-[10px] font-black rounded-md uppercase tracking-wider">Giảm 24%</span>
+              </div>
+              <p className="text-slate-500 line-through text-sm mb-1">1.300.000đ</p>
+              <p className="text-3xl font-black text-white font-headline mb-1">990.000đ</p>
+              <p className="text-slate-400 text-xs mb-6">Tổng nhóm: 3.960.000đ</p>
+              <button
+                type="button"
+                onClick={() => openRegModal('Nhóm 4 người')}
+                className="mt-auto w-full py-3 rounded-2xl bg-white/8 border border-white/15 text-slate-200 font-bold text-sm text-center hover:bg-white/12 transition-colors cursor-pointer"
+              >
+                Đăng ký nhóm →
+              </button>
+            </motion.div>
+
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer id="partners" className="bg-white w-full border-t border-slate-200 py-16">
+
+      <footer id="partners" className="bg-[#070e1a] text-slate-400 w-full py-12 border-t border-white/8">
         <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-start py-6">
             {/* Cột 1: Logo & Giới thiệu */}
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
               <a
                 href="https://aizenworld.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:opacity-80 transition-opacity cursor-pointer inline-block"
+                className="inline-block"
               >
                 <Image
                   alt="AIZEN Logo"
-                  width={160}
-                  height={32}
+                  width={140}
+                  height={36}
                   className="h-8 w-auto object-contain"
                   src="/logo.png"
                 />
               </a>
-              <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
+              <p className="text-slate-400 text-sm leading-relaxed max-w-md">
                 Đồng hành cùng doanh nghiệp trong kỷ nguyên trí tuệ nhân tạo. Giải pháp tối ưu, hiệu suất đột phá và thực chiến.
               </p>
             </div>
 
-            {/* Cột 2: Thông tin liên hệ */}
-            <div className="flex flex-col gap-6">
-              <h4 className="font-headline font-bold text-slate-900 uppercase tracking-widest text-xs">Thông tin liên hệ</h4>
-              <div className="space-y-4">
-                <a
-                  href="https://www.google.com/maps/search/?api=1&query=112+L%C3%BD+Ph%E1%BB%A5c+Man,+Ph%C6%B0%E1%BB%9Dng+T%C3%A2n+Thu%E1%BA%ADn,+Th%C3%A0nh+ph%E1%BB%91+H%E1%BB%93+Ch%C3%AD+Minh"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-start gap-3 text-slate-600 hover:text-primary transition-colors group"
-                >
-                  <span className="material-symbols-outlined text-primary text-xl mt-0.5 group-hover:scale-110 transition-transform">location_on</span>
-                  <p className="text-sm font-medium leading-relaxed">
-                    112 Lý Phục Man, Phường Tân Thuận, TP. Hồ Chí Minh
-                  </p>
-                </a>
-                <div className="flex items-center gap-3 text-slate-600">
-                  <span className="material-symbols-outlined text-primary text-xl">call</span>
-                  <p className="text-sm font-medium">0362 077 399</p>
-                </div>
-                <div className="flex items-center gap-3 text-slate-600">
-                  <span className="material-symbols-outlined text-primary text-xl">mail</span>
-                  <p className="text-sm font-medium">info@aizenworld.com</p>
-                </div>
-              </div>
+            {/* Cột 2: Thông tin liên hệ (center) */}
+            <div className="text-center">
+              <h4 className="text-white font-black text-sm uppercase tracking-wider mb-6">THÔNG TIN LIÊN HỆ</h4>
+              <ul className="space-y-4 text-left inline-block">
+                <li className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-[#3b82f6]">location_on</span>
+                  <div className="text-sm text-slate-300">112 Lý Phục Man, Phường Tân Thuận, TP. Hồ Chí Minh</div>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-[#3b82f6]">phone</span>
+                  <a href="tel:0362077399" className="text-sm text-slate-400 font-semibold">0362 077 399</a>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-[#3b82f6]">mail</span>
+                  <a href="mailto:info@aizenworld.com" className="text-sm text-slate-400">info@aizenworld.com</a>
+                </li>
+              </ul>
             </div>
 
-            {/* Cột 3: Liên kết & Chính sách */}
-            <div className="flex flex-col gap-6">
-              <h4 className="font-headline font-bold text-slate-900 uppercase tracking-widest text-xs">Chính sách & Liên kết</h4>
-              <div className="flex flex-col gap-3">
-                <a className="text-slate-500 hover:text-primary transition-colors text-sm font-medium" href="#">Chính sách bảo mật</a>
-                <a className="text-slate-500 hover:text-primary transition-colors text-sm font-medium" href="#">Điều khoản dịch vụ</a>
-                <a className="text-slate-500 hover:text-primary transition-colors text-sm font-medium" href="#">Liên hệ hỗ trợ</a>
-                <a className="text-slate-500 hover:text-primary transition-colors text-sm font-medium" href="#">Đơn vị tổ chức</a>
-              </div>
+            {/* Cột 3: Chính sách & liên kết */}
+            <div className="text-left">
+              <h4 className="text-white font-black text-sm uppercase tracking-wider mb-6">CHÍNH SÁCH & LIÊN KẾT</h4>
+              <ul className="space-y-3 text-sm text-slate-400">
+                <li><a href="#" className="hover:text-white transition-colors">Chính sách bảo mật</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Điều khoản dịch vụ</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Liên hệ hỗ trợ</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Đơn vị tổ chức</a></li>
+              </ul>
             </div>
           </div>
 
-          <div className="border-t border-slate-100 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-400 text-xs font-medium">© 2026 AIZEN World. All rights reserved.</p>
-            <div className="flex gap-6">
-              <a href="#" className="text-slate-400 hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-xl">public</span>
-              </a>
-              <a href="#" className="text-slate-400 hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-xl">account_circle</span>
-              </a>
+          <div className="border-t border-slate-100 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-slate-400 text-xs">© 2026 AIZEN World. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <a href="#" className="text-slate-400 hover:text-slate-700 transition-colors"><span className="material-symbols-outlined">public</span></a>
+              <a href="#" className="text-slate-400 hover:text-slate-700 transition-colors"><span className="material-symbols-outlined">person</span></a>
             </div>
           </div>
         </div>
       </footer>
+
       {/* Floating Zalo Button */}
       <a
         href="https://zalo.me/0362077399"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-8 right-8 z-[60] flex items-center gap-2 bg-[#0068ff] text-white px-5 py-3 rounded-full shadow-2xl hover:scale-105 transition-all active:scale-95 group"
+        className="fixed bottom-8 right-8 z-[60] flex items-center gap-2 bg-[#0068ff] text-white px-5 py-3 rounded-full shadow-2xl hover:scale-105 transition-all active:scale-95 group cursor-pointer"
       >
         <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -828,6 +1113,225 @@ export default function Home() {
           <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
         </div>
       </a>
+
+      {/* Registration Modal */}
+      <AnimatePresence>
+        {showRegModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setShowRegModal(false); setRegFormState('idle'); }}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="relative w-full max-w-lg bg-[#0c1a2e] rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden overflow-y-auto max-h-[90vh]"
+            >
+              {/* Close button */}
+              <button
+                onClick={() => { setShowRegModal(false); setRegFormState('idle'); }}
+                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:bg-white/20 transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+
+              {regFormState === 'success' ? (
+                /* ── SUCCESS: Show QR image ── */
+                <div className="p-8 text-center">
+                  <div className="w-14 h-14 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="material-symbols-outlined text-3xl">check_circle</span>
+                  </div>
+                  <h3 className="text-2xl font-black font-headline text-white mb-1">Đăng ký thành công!</h3>
+                  <p className="text-slate-400 text-sm mb-6">Vui lòng quét mã QR bên dưới để hoàn tất thanh toán học phí.</p>
+                  <div className="bg-white rounded-2xl p-4 mx-auto max-w-[280px] shadow-xl">
+                    <Image
+                      src={getQRImage(modalPkg)}
+                      alt={`QR thanh toán ${modalPkg}`}
+                      width={280}
+                      height={280}
+                      className="w-full h-auto rounded-xl"
+                    />
+                  </div>
+                  <p className="text-slate-400 text-xs mt-4 mb-6">Gói: <span className="text-white font-bold">{modalPkg}</span></p>
+                  <button
+                    onClick={() => { setShowRegModal(false); setRegFormState('idle'); }}
+                    className="px-8 py-3 bg-gradient-to-r from-[#3b82f6] to-[#38bdf8] text-[#0e2434] font-black rounded-2xl hover:opacity-90 transition-opacity"
+                  >
+                    Đã hiểu
+                  </button>
+                </div>
+              ) : (
+                /* ── FORM ── */
+                <div className="p-6 sm:p-8">
+                  {/* Header */}
+                  <div className="mb-6">
+                    <span className="text-xs font-black tracking-widest text-[#3b82f6] uppercase">Đăng ký tham gia</span>
+                    <h3 className="text-2xl font-black font-headline text-white mt-1">{modalPkg}</h3>
+                    <p className="text-slate-400 text-sm mt-1">
+                      {getMemberCount(modalPkg) === 1 ? 'Điền thông tin cá nhân của bạn' : `Điền thông tin cho ${getMemberCount(modalPkg)} học viên`}
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleGroupSubmit} className="space-y-6">
+                    <input type="hidden" name="package_type" value={modalPkg} />
+                    {/* Honeypot */}
+                    <div className="hidden" aria-hidden="true">
+                      <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+                    </div>
+
+                    {/* Dynamic member fields */}
+                    {Array.from({ length: getMemberCount(modalPkg) }, (_, i) => (
+                      <div key={i} className="space-y-3">
+                        {getMemberCount(modalPkg) > 1 && (
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-7 h-7 rounded-full bg-[#3b82f6]/20 text-[#3b82f6] flex items-center justify-center text-xs font-black shrink-0">{i + 1}</div>
+                            <span className="text-sm font-bold text-white">Người {i + 1}{i === 0 ? <span className="text-slate-400 font-normal"> · Liên hệ chính</span> : ''}</span>
+                          </div>
+                        )}
+
+                        {/* Họ tên + SĐT - 2 cột trên desktop */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Họ và tên *</label>
+                            <input
+                              type="text"
+                              name={`fullname_${i + 1}`}
+                              required
+                              placeholder="Nguyễn Văn A"
+                              className="w-full px-4 py-2.5 bg-white/6 border border-white/10 rounded-xl text-white placeholder-slate-500 text-sm focus:border-[#3b82f6]/60 focus:outline-none focus:bg-white/8 transition-all"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Số điện thoại *</label>
+                            <input
+                              type="tel"
+                              name={`phone_${i + 1}`}
+                              required
+                              placeholder="09xx xxx xxx"
+                              className="w-full px-4 py-2.5 bg-white/6 border border-white/10 rounded-xl text-white placeholder-slate-500 text-sm focus:border-[#3b82f6]/60 focus:outline-none focus:bg-white/8 transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Chỉ person đầu tiên cần thêm thông tin */}
+                        {i === 0 && (
+                          <>
+                            {/* Email + Công ty - 2 cột */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email *</label>
+                                <input
+                                  type="email"
+                                  name="email_1"
+                                  required
+                                  placeholder="email@example.com"
+                                  className="w-full px-4 py-2.5 bg-white/6 border border-white/10 rounded-xl text-white placeholder-slate-500 text-sm focus:border-[#3b82f6]/60 focus:outline-none focus:bg-white/8 transition-all"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tên công ty</label>
+                                <input
+                                  type="text"
+                                  name="company"
+                                  placeholder="Công ty của bạn"
+                                  className="w-full px-4 py-2.5 bg-white/6 border border-white/10 rounded-xl text-white placeholder-slate-500 text-sm focus:border-[#3b82f6]/60 focus:outline-none focus:bg-white/8 transition-all"
+                                />
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {getMemberCount(modalPkg) > 1 && i < getMemberCount(modalPkg) - 1 && (
+                          <div className="border-b border-white/8 pt-3" />
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Bạn là? + Nguồn tin - 2 cột trên desktop */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bạn là? *</label>
+                        <div className="relative">
+                          <select
+                            name="role"
+                            required
+                            className="w-full px-4 py-2.5 bg-white/6 border border-white/10 rounded-xl text-white text-sm focus:border-[#3b82f6]/60 focus:outline-none transition-all appearance-none pr-8"
+                            defaultValue=""
+                          >
+                            <option value="" disabled className="bg-[#0c1a2e] text-slate-400">Chọn vị trí...</option>
+                            <option value="Chủ doanh nghiệp" className="bg-[#0c1a2e]">Chủ doanh nghiệp</option>
+                            <option value="Quản lý phòng ban" className="bg-[#0c1a2e]">Quản lý phòng ban</option>
+                            <option value="Nhân viên" className="bg-[#0c1a2e]">Nhân viên</option>
+                            <option value="Sinh viên" className="bg-[#0c1a2e]">Sinh viên</option>
+                            <option value="Khác" className="bg-[#0c1a2e]">Khác</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none">expand_more</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Biết đến từ đâu? *</label>
+                        <div className="relative">
+                          <select
+                            name="referral"
+                            required
+                            className="w-full px-4 py-2.5 bg-white/6 border border-white/10 rounded-xl text-white text-sm focus:border-[#3b82f6]/60 focus:outline-none transition-all appearance-none pr-8"
+                            defaultValue=""
+                          >
+                            <option value="" disabled className="bg-[#0c1a2e] text-slate-400">Chọn nguồn...</option>
+                            <option value="Cộng Đồng AI ỨNG DỤNG SALE & MARKETING" className="bg-[#0c1a2e]">Cộng Đồng AI ỨNG DỤNG SALE &amp; MARKETING</option>
+                            <option value="Khách hàng AIZEN" className="bg-[#0c1a2e]">Khách hàng AIZEN</option>
+                            <option value="Người quen giới thiệu" className="bg-[#0c1a2e]">Người quen giới thiệu</option>
+                            <option value="Khác" className="bg-[#0c1a2e]">Khác</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none">expand_more</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Error */}
+                    {regFormState === 'error' && (
+                      <div className="flex items-center gap-2 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                        <span className="material-symbols-outlined text-base shrink-0">error</span>
+                        {regError}
+                      </div>
+                    )}
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={regFormState === 'loading'}
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#3b82f6] to-[#38bdf8] text-[#0e2434] font-black text-base hover:opacity-90 transition-opacity shadow-lg shadow-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {regFormState === 'loading' ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                          Đang gửi...
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-lg">send</span>
+                          Gửi đăng ký
+                        </>
+                      )}
+                    </button>
+                    <p className="text-center text-xs text-slate-500">Chúng tôi sẽ liên hệ xác nhận qua điện thoại trong 24h.</p>
+                  </form>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </main>
+
   );
 }

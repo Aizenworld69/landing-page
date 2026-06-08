@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="g2" x1="0" x2="1">
+      <stop offset="0" stop-color="#1e3a8a"/>
+      <stop offset="1" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#081525" rx="20"/>
+  <rect x="30" y="30" width="740" height="120" rx="12" fill="url(#g2)" opacity="0.95"/>
+  <text x="50%" y="100" dominant-baseline="middle" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#fff" font-weight="700">PR - Nhóm 2</text>
+  <text x="50%" y="180" dominant-baseline="middle" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#cfeef6">2 người — Tổng 2.200.000đ</text>
+</svg>
