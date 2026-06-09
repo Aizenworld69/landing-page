@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring, useMotionValue, useTransform } from 'framer-motion';
@@ -309,7 +309,7 @@ export default function Home() {
     { time: '9:00', title: 'Module 2: Bộ 4 công cụ cốt lõi của Claude', description: 'Skills - não bộ chuyên môn; Projects - bộ nhớ dài hạn', badge: '1 GIỜ' },
     { time: '10:00', title: 'Giải lao & Tea-break', description: '', badge: '20 PHÚT' },
     { time: '10:20', title: 'Module 3: Bộ 4 công cụ cốt lõi của Claude', description: 'Connectors - cầu nối ra thế giới bên ngoài; Artifacts - xưởng sản xuất đầu ra', badge: '1 GIỜ' },
-    { time: '11:20', title: 'Module 4: Claude + NotebookLM', description: '', badge: '40 PHÚT' },
+    { time: '11:20', title: 'Module 4: Tạo Landing Page quảng cáo cùng Claude', description: '', badge: '40 PHÚT' },
     { time: '12:00', title: 'Nghỉ trưa & Networking', description: '', badge: '1 GIỜ 20 PHÚT' },
     { time: '13:20', title: 'Warming up', description: '', badge: '10 PHÚT' },
     { time: '13:30', title: 'Module 5: Claude + Canva', description: '', badge: '30 PHÚT' },
@@ -695,8 +695,8 @@ export default function Home() {
             />
           </div>
 
-          {/* Bottom Grid: 5 cards on 1 row on desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          {/* Bottom Grid: 4 cards on 1 row on desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {/* Card 4: Claude Connectors */}
             <SkillCard
               icon="hub"
@@ -722,15 +722,6 @@ export default function Home() {
               iconBg="bg-purple-100"
               title="Claude + Canva"
               description="Hai công cụ kết hợp liền mạch để biến ý tưởng thiết kế của bạn thành ấn phẩm hoàn chỉnh."
-            />
-
-            {/* Card 7: Claude + NotebookLM */}
-            <SkillCard
-              icon="auto_stories"
-              iconColor="text-cyan-600"
-              iconBg="bg-cyan-100"
-              title="Claude + NotebookLM"
-              description="NotebookLM kéo toàn bộ dữ liệu từ thế giới bên ngoài, Claude đào sâu vào kho tài liệu - hai công cụ kết hợp cho ra insight toàn diện mà một mình không AI nào làm được."
             />
 
             {/* Card 8: 10 Mẹo tối ưu Token */}
