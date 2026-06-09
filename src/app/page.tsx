@@ -1,10 +1,11 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import Image from 'next/image';
 import { eventDate, eventAddress, eventPrice } from '../lib/siteConfig';
 import { submitRegistration, submitGroupRegistration } from './actions';
+import { SpotlightEffects } from './SpotlightEffects';
 
 function CustomSelect({
   label,
@@ -149,28 +150,6 @@ function SkillCard({
 }
 
 export default function Home() {
-  // Spotlight motion values (tracks mouse)
-  const mouseX = useMotionValue(typeof window !== 'undefined' ? window.innerWidth / 2 : 0);
-  const mouseY = useMotionValue(typeof window !== 'undefined' ? window.innerHeight / 2 : 0);
-  const spotX = useSpring(mouseX, { stiffness: 80, damping: 20 });
-  const spotY = useSpring(mouseY, { stiffness: 80, damping: 20 });
-
-  const spotlightMask = useTransform([spotX, spotY], (latest: number[]) => {
-    const [x, y] = latest;
-    return `radial-gradient(650px circle at ${x}px ${y}px, transparent 0%, transparent 20%, rgba(0,0,0,0.20) 45%, rgba(0,0,0,0.42) 70%, rgba(0,0,0,0.52) 100%)`;
-  });
-
-  const glowX = useTransform(spotX, (v: number) => v - 350);
-  const glowY = useTransform(spotY, (v: number) => v - 350);
-
-  useEffect(() => {
-    const handleMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
-    };
-    window.addEventListener('mousemove', handleMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMove);
-  }, [mouseX, mouseY]);
   const [formState, setFormState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [activeSection, setActiveSection] = useState('');
@@ -207,12 +186,13 @@ export default function Home() {
       if (difference <= 0) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       } else {
-        setTimeLeft({
+        const timeData = {
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
           hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
           minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
           seconds: Math.floor((difference % (1000 * 60)) / 1000)
-        });
+        };
+        setTimeLeft(timeData);
       }
     };
 
@@ -324,27 +304,7 @@ export default function Home() {
 
   return (
     <main className="overflow-x-hidden relative min-h-screen" style={{ background: '#0e2434' }}>
-      {/* Mouse Spotlight Overlay (masked dark layer - reveals content near cursor) */}
-      <motion.div
-        className="fixed inset-0 pointer-events-none z-[25]"
-        style={{
-          background: 'rgba(6,12,28,0.38)',
-          WebkitMaskImage: spotlightMask,
-          maskImage: spotlightMask,
-        }}
-      />
-      {/* Teal glow orb follows cursor */}
-      <motion.div
-        className="fixed pointer-events-none z-[24] rounded-full"
-        style={{
-          width: 700,
-          height: 700,
-          background: 'radial-gradient(circle, rgba(59, 130, 246,0.15) 0%, rgba(56,189,248,0.09) 35%, transparent 70%)',
-          filter: 'blur(25px)',
-          x: glowX,
-          y: glowY,
-        }}
-      />      {/* Scroll Progress Bar */}
+      <SpotlightEffects />      {/* Scroll Progress Bar */}
       <motion.div
         style={{ scaleX }}
         className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#3b82f6] via-[#38bdf8] to-blue-400 origin-left z-[200] shadow-lg shadow-[0_0_20px_rgba(59, 130, 246,0.12)]"
@@ -452,7 +412,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Top Navigation */}
+
       <nav className="fixed top-3 sm:top-6 left-2 right-2 sm:left-0 sm:right-0 z-50 bg-[#0e2434]/80 backdrop-blur-xl shadow-md border border-white/10 rounded-full mx-auto max-w-6xl px-1 sm:px-2">
         <div className="flex justify-between items-center px-4 sm:px-6 py-2 sm:py-3">
           <div
@@ -502,6 +462,22 @@ export default function Home() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6 }}
+            className="flex flex-col items-center gap-4 mb-4"
+          >
+            <Image
+              src="/logocuoi.jpg"
+              alt="3 Logos - PTIT, PTTC, AIZEN"
+              width={240}
+              height={60}
+              className="h-12 sm:h-16 w-auto object-contain"
+            />
+          </motion.div>
+
+
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6 }}
             className="text-xs sm:text-sm font-black tracking-widest text-[#3b82f6] uppercase mb-4"
           >
             Khóa học từ cơ bản đến chuyên sâu
@@ -520,11 +496,10 @@ export default function Home() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-lg sm:text-2xl text-slate-300 font-medium font-headline tracking-wide max-w-2xl mb-8 leading-relaxed italic"
+            className="text-lg sm:text-2xl text-slate-300 font-medium font-headline tracking-wide max-w-2xl mb-8 leading-relaxed italic text-center"
           >
             Xây dựng trợ lý phòng ban<br />tự động làm việc
           </motion.p>
-
 
 
           {/* Meta tags */}
@@ -545,8 +520,13 @@ export default function Home() {
             <span className="hidden sm:inline-block h-4 border-l border-slate-600" />
 
             <div className="flex items-start gap-1">
-              <span className="material-symbols-outlined text-pink-500 text-lg shrink-0 mt-0.5">place</span>
-              <span className="text-slate-300 text-left">
+              <span className="material-symbols-outlined text-blue-500 text-lg shrink-0 mt-0.5">place</span>
+              <a 
+                href="https://www.google.com/maps/place/Trung+t%C3%A2m+%C4%90%C3%A0o+T%E1%BA%A1o+B%C6%B0u+ch%C3%ADnh+Vi%E1%BB%85n+th%C3%B4ng/@10.7896789,106.7006799,779m/data=!3m1!1e3!4m6!3m5!1s0x317528b54fb5699d:0xa19aa146dff27e08!8m2!3d10.7893722!4d106.7007822!16s%2Fg%2F11b5phr1rt?entry=ttu&g_ep=EgoyMDI2MDYwMy4xIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-300 text-left hover:text-blue-400 transition-colors cursor-pointer"
+              >
                 {eventAddress.includes('(') ? (
                   <>
                     {eventAddress.split('(')[0].trim()}
@@ -556,7 +536,7 @@ export default function Home() {
                 ) : (
                   eventAddress
                 )}
-              </span>
+              </a>
             </div>
 
 
@@ -564,20 +544,31 @@ export default function Home() {
 
           {/* Prominent badges: 01 ngày offline / 03 ngày online / Học lại trọn đời (moved below meta) */}
           <div className="flex items-center justify-center gap-4 mb-6">
-            {['01 ngày offline thực hành', '03 ngày online hỗ trợ', 'Học lại trọn đời'].map((t, i) => (
+            {[
+              { text: '01 ngày offline thực hành', icon: '/icon1.png' },
+              { text: '03 ngày online hỗ trợ', icon: '/icon2.png' },
+              { text: 'Học lại trọn đời', icon: '/icon3.png' }
+            ].map((item, i) => (
               <div
                 key={i}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-white glow-white font-black text-sm sm:text-base bg-white/5 border border-white/10"
+                className="flex items-center gap-2.5 px-4 py-2 rounded-full text-white glow-white font-black text-sm sm:text-base bg-white/5 border border-white/10"
                 style={{
                   textShadow: '0 0 18px rgba(255,255,255,0.15)',
                   boxShadow: '0 8px 30px rgba(59, 130, 246,0.04)'
                 }}
               >
-                <span className="material-symbols-outlined text-red-500 text-base sm:text-lg shrink-0 font-bold">check</span>
-                <span>{t}</span>
+                <Image
+                  src={item.icon}
+                  alt="icon"
+                  width={32}
+                  height={32}
+                  className="w-7 h-7 sm:w-8 sm:h-8 object-contain shrink-0"
+                />
+                <span>{item.text}</span>
               </div>
             ))}
           </div>
+
 
           {/* Countdown area */}
           <motion.div
@@ -1015,7 +1006,7 @@ export default function Home() {
                 <span className="inline-block px-2 py-0.5 bg-slate-700/60 text-slate-300 text-[10px] font-black rounded-md uppercase tracking-wider">Giảm 24%</span>
               </div>
               <p className="text-slate-500 line-through text-sm mb-1">5.200.000đ</p>
-              <p className="text-3xl font-black text-white font-headline mb-1">3.960.000đ</p>
+              <p className="text-3xl font-black text-white font-headline mb-1">990.000đ</p>
               <p className="text-slate-400 text-xs mb-6">Tổng nhóm: 3.960.000đ</p>
               <button
                 type="button"

@@ -7,6 +7,8 @@ import ExportRegistrations from './ExportRegistrations';
 import PaymentToggle from './PaymentToggle';
 import AddManualModal from './AddManualModal';
 import EditModal from './EditModal';
+import FilterBar from './FilterBar';
+import RowExpander from './RowExpander';
 import Link from 'next/link';
 import SidebarNav from './SidebarNav';
 
@@ -32,6 +34,16 @@ type Registration = {
   package_type: string;
 };
 
+type GroupMember = {
+  id: number;
+  registration_id: number;
+  member_index: number;
+  fullname: string;
+  phone?: string;
+  email?: string;
+  company?: string;
+};
+
 const ITEMS_PER_PAGE = 10;
 
 // Sidebar navigation items
@@ -44,7 +56,7 @@ const NAV_ITEMS = [
 ];
 
 export default async function AdminPage(props: {
-  searchParams: Promise<{ page?: string; q?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; status?: string; course?: string; month?: string }>;
 }) {
   // Kiểm tra auth bằng session token trong DB
   const authenticated = await checkAuth();
@@ -56,6 +68,8 @@ export default async function AdminPage(props: {
   const currentPage = Math.max(1, parseInt(searchParams.page ?? '1', 10));
   const searchQuery = searchParams.q?.toLowerCase().trim() ?? '';
   const statusFilter = searchParams.status ?? '';
+  const courseFilter = searchParams.course?.trim() ?? '';
+  const monthFilter = searchParams.month?.trim() ?? '';
 
   // Xây dựng query có điều kiện search + filter
   let whereClause = 'WHERE 1=1';
@@ -72,6 +86,25 @@ export default async function AdminPage(props: {
     queryParams.push(statusFilter);
   }
 
+  if (courseFilter) {
+    whereClause += ' AND course = ?';
+    queryParams.push(courseFilter);
+  }
+
+  if (monthFilter) {
+    whereClause += ' AND cohort_month = ?';
+    queryParams.push(monthFilter);
+  }
+
+  // Get unique courses and months for filter dropdowns
+  const distinctCourses = db
+    .prepare("SELECT DISTINCT name as course FROM courses ORDER BY name")
+    .all() as { course: string }[];
+
+  const distinctMonths = db
+    .prepare("SELECT DISTINCT cohort_month FROM registrations WHERE cohort_month != '' ORDER BY cohort_month DESC")
+    .all() as { cohort_month: string }[];
+
   // Đếm tổng bản ghi phù hợp với filter
   const totalFiltered = db
     .prepare(`SELECT COUNT(*) as count FROM registrations ${whereClause}`)
@@ -86,6 +119,15 @@ export default async function AdminPage(props: {
       `SELECT * FROM registrations ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     )
     .all(...queryParams, ITEMS_PER_PAGE, offset) as Registration[];
+
+  // Fetch all group members for the current page registrations
+  const allGroupMembers = db
+    .prepare(
+      `SELECT * FROM group_members 
+       WHERE registration_id IN (${registrations.map(() => '?').join(',')})
+       ORDER BY registration_id, member_index`,
+    )
+    .all(...registrations.map((r) => r.id)) as GroupMember[];
 
   // Stats tổng quan (không phụ thuộc filter)
   const totalAll = db
@@ -230,9 +272,9 @@ export default async function AdminPage(props: {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 
             {/* Toolbar: search + filter + add */}
-            <div className="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-              {/* Search */}
-              <form method="GET" className="relative flex-1 max-w-sm">
+            <div className="px-6 py-4 border-b border-slate-100 flex flex-col gap-3">
+              {/* Row 1: Search */}
+              <form method="GET" className="relative max-w-sm">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
                   search
                 </span>
@@ -243,8 +285,11 @@ export default async function AdminPage(props: {
                   className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1a7a5e]/20 focus:border-[#1a7a5e] text-slate-900"
                 />
                 {statusFilter && <input type="hidden" name="status" value={statusFilter} />}
+                {courseFilter && <input type="hidden" name="course" value={courseFilter} />}
+                {monthFilter && <input type="hidden" name="month" value={monthFilter} />}
               </form>
 
+              {/* Row 2: Filters + Add button */}
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Status filter */}
                 <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-bold">
@@ -267,8 +312,18 @@ export default async function AdminPage(props: {
                   })}
                 </div>
 
+                {/* Filters: Course & Month */}
+                <FilterBar
+                  searchQuery={searchQuery}
+                  statusFilter={statusFilter}
+                  courseFilter={courseFilter}
+                  monthFilter={monthFilter}
+                  distinctCourses={distinctCourses}
+                  distinctMonths={distinctMonths}
+                />
+
                 {/* Nút Thêm thủ công */}
-                <AddManualModal />
+                <AddManualModal coursesList={distinctCourses} />
               </div>
             </div>
 
@@ -307,18 +362,29 @@ export default async function AdminPage(props: {
 
                         {/* Họ tên */}
                         <td className="px-5 py-4">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-bold text-slate-900 text-sm">{reg.fullname}</p>
-                            {reg.package_type && (
-                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                                reg.package_type === 'VIP'
-                                  ? 'bg-purple-50 text-purple-700 border border-purple-100'
-                                  : 'bg-teal-50 text-teal-700 border border-teal-100'
-                              }`}>
-                                {reg.package_type}{reg.members > 1 ? ` (x${reg.members})` : ''}
-                              </span>
-                            )}
-                          </div>
+                          {reg.members > 1 ? (
+                            <RowExpander
+                              registrationId={reg.id}
+                              members={reg.members}
+                              primaryName={reg.fullname}
+                              primaryPhone={reg.phone}
+                              packageType={reg.package_type}
+                              allGroupMembers={allGroupMembers.filter((m) => m.registration_id === reg.id)}
+                            />
+                          ) : (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-bold text-slate-900 text-sm">{reg.fullname}</p>
+                              {reg.package_type && (
+                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                                  reg.package_type === 'VIP'
+                                    ? 'bg-purple-50 text-purple-700 border border-purple-100'
+                                    : 'bg-teal-50 text-teal-700 border border-teal-100'
+                                }`}>
+                                  {reg.package_type}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           {reg.company && (
                             <p className="text-xs text-slate-500 mt-0.5">{reg.company}</p>
                           )}
@@ -370,7 +436,7 @@ export default async function AdminPage(props: {
 
                         {/* Actions: Edit + Delete */}
                         <td className="px-5 py-4 text-right flex items-center justify-end gap-2">
-                          <EditModal registration={reg} />
+                          <EditModal registration={reg} coursesList={distinctCourses} />
                           <DeleteButton id={reg.id} />
                         </td>
                       </tr>

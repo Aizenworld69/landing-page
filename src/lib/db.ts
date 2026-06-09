@@ -27,9 +27,6 @@ db.exec(`
     password TEXT NOT NULL
   );
 
-  -- Seed admin (password is hashed)
-  INSERT OR IGNORE INTO admins (username, password) VALUES ('aizen', '${bcrypt.hashSync('Aizen@2026', 10)}');
-
   -- Bảng sessions: lưu token xác thực thay vì chỉ dùng cookie boolean
   CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +36,34 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
   );
+
+  -- Bảng group_members: lưu thông tin từng thành viên trong nhóm
+  CREATE TABLE IF NOT EXISTS group_members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    registration_id INTEGER NOT NULL,
+    member_index INTEGER NOT NULL,
+    fullname TEXT NOT NULL,
+    phone TEXT,
+    email TEXT,
+    role TEXT,
+    company TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (registration_id) REFERENCES registrations(id) ON DELETE CASCADE
+  );
+
+  -- Bảng courses: quản lý khóa học
+  CREATE TABLE IF NOT EXISTS courses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    month TEXT NOT NULL,
+    implementation_date TEXT NOT NULL,
+    location TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
+
+// Seed admin (password is hashed)
+db.prepare("INSERT OR IGNORE INTO admins (username, password) VALUES (?, ?)").run('aizen', bcrypt.hashSync('Aizen@2026', 10));
 
 // Thêm cột nếu chưa tồn tại (ALTER TABLE sẽ lỗi nếu cột đã có — bỏ qua)
 try { db.exec('ALTER TABLE registrations ADD COLUMN referral TEXT'); } catch (_) {}
@@ -50,11 +74,15 @@ try { db.exec('ALTER TABLE registrations ADD COLUMN payment_content TEXT'); } ca
 try { db.exec('ALTER TABLE registrations ADD COLUMN amount INTEGER DEFAULT 150000'); } catch (_) {}
 try { db.exec('ALTER TABLE registrations ADD COLUMN members INTEGER DEFAULT 1'); } catch (_) {}
 try { db.exec('ALTER TABLE registrations ADD COLUMN package_type TEXT DEFAULT \'\''); } catch (_) {}
+try { db.exec('ALTER TABLE registrations ADD COLUMN course TEXT DEFAULT \'\''); } catch (_) {}
+try { db.exec('ALTER TABLE registrations ADD COLUMN cohort_month TEXT DEFAULT \'\''); } catch (_) {}
 
 // Tối ưu hóa database bằng Indexes cho Production
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_phone ON registrations(phone)'); } catch (_) {}
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_email ON registrations(email)'); } catch (_) {}
 try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_created_at ON registrations(created_at)'); } catch (_) {}
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_group_members_registration_id ON group_members(registration_id)'); } catch (_) {}
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_courses_month ON courses(month)'); } catch (_) {}
 
 export default db;
 

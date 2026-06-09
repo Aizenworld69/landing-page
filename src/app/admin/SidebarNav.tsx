@@ -10,6 +10,8 @@ export default function SidebarNav() {
   const items = [
     { icon: 'grid_view', label: 'Overview', href: '/admin' },
     { icon: 'group', label: 'Registrations', href: '/admin' },
+    { icon: 'school', label: 'Courses', href: '/admin/courses' },
+    { icon: 'bar_chart', label: 'Reports', href: '/admin/reports' },
   ];
 
   return (
