@@ -15,10 +15,17 @@ type Registration = {
   package_type: string;
   created_at: string;
   payment_status: 'PAID' | 'UNPAID';
+  course?: string;
+  cohort_month?: string;
 };
+
+interface CourseOption {
+  course: string;
+}
 
 interface EditModalProps {
   registration: Registration;
+  coursesList?: CourseOption[];
 }
 
 const formatDbDateForInput = (dateStr: string) => {
@@ -26,7 +33,7 @@ const formatDbDateForInput = (dateStr: string) => {
   return dateStr.replace(' ', 'T').substring(0, 16);
 };
 
-export default function EditModal({ registration: reg }: EditModalProps) {
+export default function EditModal({ registration: reg, coursesList = [] }: EditModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
@@ -344,6 +351,40 @@ export default function EditModal({ registration: reg }: EditModalProps) {
                       <option value="UNPAID">UNPAID (Chưa đóng)</option>
                       <option value="PAID">PAID (Đã đóng)</option>
                     </select>
+                  </div>
+                </div>
+
+                {/* KHOÁ HỌC & THÁNG KHAI GIẢNG */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                      Khoá học
+                    </label>
+                    <select
+                      name="course"
+                      defaultValue={reg.course || ''}
+                      disabled={isPending}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 disabled:opacity-60 transition-all font-medium cursor-pointer"
+                    >
+                      <option value="">-- Chọn khoá học --</option>
+                      {coursesList.map((c) => (
+                        <option key={c.course} value={c.course}>
+                          {c.course}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                      Tháng khai giảng
+                    </label>
+                    <input
+                      name="cohort_month"
+                      type="month"
+                      defaultValue={reg.cohort_month || ''}
+                      disabled={isPending}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 disabled:opacity-60 transition-all font-medium cursor-pointer"
+                    />
                   </div>
                 </div>
               </div>

@@ -110,14 +110,18 @@ export async function submitRegistration(formData: FormData): Promise<
       .replace('T', ' ')
       .substring(0, 19);
 
+    // Tính tháng khai giảng (YYYY-MM) từ thời gian hiện tại
+    const cohortDateObj = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const cohortMonth = cohortDateObj.toISOString().substring(0, 7); // YYYY-MM format
+
     // Tạo mã nội dung chuyển khoản với prefix theo gói
     const paymentContent = generatePaymentContent(fullname, phone, packageType);
 
     db.prepare(
       `INSERT INTO registrations 
-       (fullname, phone, email, referral, role, company, payment_status, payment_content, amount, created_at, members, package_type) 
-       VALUES (?, ?, ?, ?, ?, ?, 'UNPAID', ?, ?, ?, ?, ?)`,
-    ).run(fullname, phone, email, referral, role, company, paymentContent, amount, vietnamTime, members, packageType);
+       (fullname, phone, email, referral, role, company, payment_status, payment_content, amount, created_at, members, package_type, course, cohort_month) 
+       VALUES (?, ?, ?, ?, ?, ?, 'UNPAID', ?, ?, ?, ?, ?, ?, ?)`,
+    ).run(fullname, phone, email, referral, role, company, paymentContent, amount, vietnamTime, members, packageType, '', cohortMonth);
 
     // Gửi thông báo sang Lark webhook
     try {
@@ -268,12 +272,15 @@ export async function addManualRegistration(formData: FormData) {
     const phone = formData.get('phone')?.toString().trim();
     const email = formData.get('email')?.toString().trim() || '';
     const company = formData.get('company')?.toString().trim() || '';
+    const course = formData.get('course')?.toString().trim() || '';
+    const cohortMonth = formData.get('cohort_month')?.toString().trim() || '';
     const amountRaw = formData.get('amount')?.toString().trim();
     const paymentStatus = formData.get('payment_status')?.toString() as 'PAID' | 'UNPAID';
     const packageType = formData.get('package_type')?.toString().trim() || 'Standard';
     const membersRaw = formData.get('members')?.toString().trim();
     const members = membersRaw ? parseInt(membersRaw, 10) : 1;
     const createdAtRaw = formData.get('created_at')?.toString().trim();
+    const memberDetailsRaw = formData.get('memberDetails')?.toString().trim() || '[]';
 
     if (!fullname || !phone) {
       return { success: false, error: 'Họ tên và SĐT là bắt buộc.' };
@@ -297,10 +304,11 @@ export async function addManualRegistration(formData: FormData) {
         .substring(0, 19);
     }
 
-    db.prepare(
+    // Insert main registration
+    const result = db.prepare(
       `INSERT INTO registrations 
-       (fullname, phone, email, referral, role, company, payment_status, payment_content, amount, created_at, members, package_type) 
-       VALUES (?, ?, ?, 'Thêm thủ công', 'Admin', ?, ?, ?, ?, ?, ?, ?)`,
+       (fullname, phone, email, referral, role, company, payment_status, payment_content, amount, created_at, members, package_type, course, cohort_month) 
+       VALUES (?, ?, ?, 'Thêm thủ công', 'Admin', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(
       fullname,
       phone,
@@ -312,7 +320,42 @@ export async function addManualRegistration(formData: FormData) {
       vietnamTime,
       members,
       packageType,
-    );
+      course,
+      cohortMonth,
+    ) as { lastInsertRowid: number };
+
+    const registrationId = result.lastInsertRowid;
+
+    // Insert member details if provided
+    try {
+      const memberDetails = JSON.parse(memberDetailsRaw) as Array<{
+        fullname: string;
+        phone: string;
+        email: string;
+        role: string;
+        company: string;
+      }>;
+
+      const insertMemberStmt = db.prepare(
+        `INSERT INTO group_members (registration_id, member_index, fullname, phone, email, role, company, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      );
+
+      memberDetails.forEach((member, idx) => {
+        insertMemberStmt.run(
+          registrationId,
+          idx,
+          member.fullname || '',
+          member.phone || '',
+          member.email || '',
+          member.role || '',
+          member.company || '',
+          vietnamTime,
+        );
+      });
+    } catch (parseError) {
+      console.error('Lỗi khi parse member details:', parseError);
+    }
 
     revalidatePath('/admin');
     return { success: true };
@@ -412,6 +455,8 @@ export async function updateRegistration(id: number, formData: FormData) {
     const phone = formData.get('phone')?.toString().trim();
     const email = formData.get('email')?.toString().trim() ?? '';
     const company = formData.get('company')?.toString().trim() ?? '';
+    const course = formData.get('course')?.toString().trim() ?? '';
+    const cohortMonth = formData.get('cohort_month')?.toString().trim() ?? '';
     const amountRaw = formData.get('amount')?.toString().trim();
     const paymentContent = formData.get('payment_content')?.toString().trim() ?? '';
     const packageType = formData.get('package_type')?.toString().trim() || 'Standard';
@@ -442,9 +487,9 @@ export async function updateRegistration(id: number, formData: FormData) {
 
     db.prepare(`
       UPDATE registrations
-      SET fullname = ?, phone = ?, email = ?, company = ?, amount = ?, payment_content = ?, package_type = ?, members = ?, created_at = ?, payment_status = ?
+      SET fullname = ?, phone = ?, email = ?, company = ?, amount = ?, payment_content = ?, package_type = ?, members = ?, created_at = ?, payment_status = ?, course = ?, cohort_month = ?
       WHERE id = ?
-    `).run(fullname, phone, email, company, amount, paymentContent, packageType, members, vietnamTime, paymentStatus, id);
+    `).run(fullname, phone, email, company, amount, paymentContent, packageType, members, vietnamTime, paymentStatus, course, cohortMonth, id);
 
     revalidatePath('/admin');
     return { success: true };
@@ -469,5 +514,86 @@ export async function deleteRegistration(id: number) {
   } catch (error) {
     console.error('Lỗi khi xóa đăng ký:', error);
     return { success: false, error: 'Đã có lỗi xảy ra khi xóa.' };
+  }
+}
+
+// ─────────────────────────────────────────────
+// Courses Management Actions
+// ─────────────────────────────────────────────
+
+// Action: Thêm khóa học mới
+export async function addCourse(formData: FormData) {
+  try {
+    const authenticated = await checkAuth();
+    if (!authenticated) {
+      return { success: false, error: 'Phiên đăng nhập không hợp lệ.' };
+    }
+
+    const name = formData.get('name')?.toString().trim();
+    const month = formData.get('month')?.toString().trim();
+    const implementationDate = formData.get('implementation_date')?.toString().trim();
+    const location = formData.get('location')?.toString().trim();
+
+    if (!name || !month || !implementationDate || !location) {
+      return { success: false, error: 'Vui lòng điền đầy đủ thông tin khóa học.' };
+    }
+
+    db.prepare(`
+      INSERT INTO courses (name, month, implementation_date, location)
+      VALUES (?, ?, ?, ?)
+    `).run(name, month, implementationDate, location);
+
+    revalidatePath('/admin/courses');
+    return { success: true, message: 'Khóa học đã được thêm thành công.' };
+  } catch (error) {
+    console.error('Lỗi khi thêm khóa học:', error);
+    return { success: false, error: 'Đã có lỗi xảy ra khi thêm khóa học.' };
+  }
+}
+
+// Action: Cập nhật khóa học
+export async function updateCourse(id: number, formData: FormData) {
+  try {
+    const authenticated = await checkAuth();
+    if (!authenticated) {
+      return { success: false, error: 'Phiên đăng nhập không hợp lệ.' };
+    }
+
+    const name = formData.get('name')?.toString().trim();
+    const month = formData.get('month')?.toString().trim();
+    const implementationDate = formData.get('implementation_date')?.toString().trim();
+    const location = formData.get('location')?.toString().trim();
+
+    if (!name || !month || !implementationDate || !location) {
+      return { success: false, error: 'Vui lòng điền đầy đủ thông tin khóa học.' };
+    }
+
+    db.prepare(`
+      UPDATE courses
+      SET name = ?, month = ?, implementation_date = ?, location = ?
+      WHERE id = ?
+    `).run(name, month, implementationDate, location, id);
+
+    revalidatePath('/admin/courses');
+    return { success: true, message: 'Khóa học đã được cập nhật thành công.' };
+  } catch (error) {
+    console.error('Lỗi khi cập nhật khóa học:', error);
+    return { success: false, error: 'Đã có lỗi xảy ra khi cập nhật khóa học.' };
+  }
+}
+
+// Action: Xóa khóa học
+export async function deleteCourse(id: number) {
+  try {
+    const authenticated = await checkAuth();
+    if (!authenticated) {
+      return { success: false, error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.' };
+    }
+    db.prepare('DELETE FROM courses WHERE id = ?').run(id);
+    revalidatePath('/admin/courses');
+    return { success: true };
+  } catch (error) {
+    console.error('Lỗi khi xóa khóa học:', error);
+    return { success: false, error: 'Đã có lỗi xảy ra khi xóa khóa học.' };
   }
 }

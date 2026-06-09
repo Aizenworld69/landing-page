@@ -3,7 +3,11 @@
 import { useState, useTransition, useRef, useEffect } from 'react';
 import { addManualRegistration } from '@/app/actions';
 
-export default function AddManualModal() {
+interface CourseOption {
+  course: string;
+}
+
+export default function AddManualModal({ coursesList = [] }: { coursesList?: CourseOption[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
@@ -15,6 +19,11 @@ export default function AddManualModal() {
   const [amount, setAmount] = useState(150000);
   const [isAmountManuallyEdited, setIsAmountManuallyEdited] = useState(false);
   const [registrationDate, setRegistrationDate] = useState('');
+
+  // Member details: array to store each member's info
+  const [memberDetails, setMemberDetails] = useState<
+    Array<{ fullname: string; phone: string; email: string; role: string; company: string }>
+  >([]);
 
   // Set default registration date to now (local time)
   useEffect(() => {
@@ -29,9 +38,18 @@ export default function AddManualModal() {
       setMembers(1);
       setAmount(150000);
       setIsAmountManuallyEdited(false);
+      setMemberDetails([]);
       setError('');
     }
   }, [isOpen]);
+
+  // Update memberDetails when members count changes
+  useEffect(() => {
+    const newDetails = Array(members)
+      .fill(null)
+      .map((_, i) => memberDetails[i] || { fullname: '', phone: '', email: '', role: '', company: '' });
+    setMemberDetails(newDetails);
+  }, [members]);
 
   // Recalculate amount if package or members change, unless manually edited
   useEffect(() => {
@@ -43,6 +61,12 @@ export default function AddManualModal() {
 
   const handlePackageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPackageType(e.target.value);
+  };
+
+  const handleMemberChange = (index: number, field: string, value: string) => {
+    const updated = [...memberDetails];
+    updated[index] = { ...updated[index], [field]: value };
+    setMemberDetails(updated);
   };
 
   const incrementMembers = () => {
@@ -66,6 +90,9 @@ export default function AddManualModal() {
     
     // Explicitly add members and registration date in case counter field is handled by custom buttons
     formData.set('members', members.toString());
+    
+    // Add member details as JSON string
+    formData.set('memberDetails', JSON.stringify(memberDetails));
 
     startTransition(async () => {
       const res = await addManualRegistration(formData);
@@ -299,7 +326,97 @@ export default function AddManualModal() {
                     <option value="PAID">PAID (Đã thanh toán)</option>
                   </select>
                 </div>
+
+                {/* KHOÁ HỌC & THÁNG KHAI GIẢNG */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                      Khoá học
+                    </label>
+                    <select
+                      name="course"
+                      disabled={isPending}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 outline-none focus:bg-white focus:border-[#1a7a5e] focus:ring-2 focus:ring-[#1a7a5e]/10 disabled:opacity-60 transition-all font-medium cursor-pointer"
+                    >
+                      <option value="">-- Chọn khoá học --</option>
+                      {coursesList.map((c) => (
+                        <option key={c.course} value={c.course}>
+                          {c.course}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                      Tháng khai giảng
+                    </label>
+                    <input
+                      name="cohort_month"
+                      type="month"
+                      disabled={isPending}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 outline-none focus:bg-white focus:border-[#1a7a5e] focus:ring-2 focus:ring-[#1a7a5e]/10 disabled:opacity-60 transition-all font-medium cursor-pointer"
+                    />
+                  </div>
+                </div>
               </div>
+
+              {/* SECTION 3: Thông tin các thành viên (nếu members > 1) */}
+              {members > 1 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
+                    <span className="material-symbols-outlined text-[#1a7a5e] text-[20px]">people</span>
+                    <span className="text-xs font-bold text-[#1a7a5e] uppercase tracking-wider">
+                      Thông tin thành viên ({members} người)
+                    </span>
+                  </div>
+
+                  {memberDetails.map((member, idx) => (
+                    <div key={idx} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                      <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                        Người {idx + 1}
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          placeholder="Họ tên"
+                          value={member.fullname}
+                          onChange={(e) => handleMemberChange(idx, 'fullname', e.target.value)}
+                          disabled={isPending}
+                          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-[#1a7a5e] focus:ring-1 focus:ring-[#1a7a5e]/20 disabled:opacity-60 transition-all"
+                        />
+                        <input
+                          type="tel"
+                          placeholder="SĐT"
+                          value={member.phone}
+                          onChange={(e) => handleMemberChange(idx, 'phone', e.target.value)}
+                          disabled={isPending}
+                          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-[#1a7a5e] focus:ring-1 focus:ring-[#1a7a5e]/20 disabled:opacity-60 transition-all"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="email"
+                          placeholder="Email"
+                          value={member.email}
+                          onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
+                          disabled={isPending}
+                          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-[#1a7a5e] focus:ring-1 focus:ring-[#1a7a5e]/20 disabled:opacity-60 transition-all"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Công ty"
+                          value={member.company}
+                          onChange={(e) => handleMemberChange(idx, 'company', e.target.value)}
+                          disabled={isPending}
+                          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-[#1a7a5e] focus:ring-1 focus:ring-[#1a7a5e]/20 disabled:opacity-60 transition-all"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Error */}
               {error && (
