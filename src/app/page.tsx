@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring, useMotionValue, useTransform } from 'framer-motion';
@@ -402,8 +402,8 @@ export default function Home() {
                       {displayPkg === 'Nhóm 4 người'
                         ? 'Nhóm 4 người, phí đầu tư: 1.300.000 x 4 = 5.200.000, giảm còn 3.960.000'
                         : displayPkg === 'Nhóm 2 người'
-                        ? 'Nhóm 2 người, phí đầu tư: 1.300.000 x 2 = 2.600.000, giảm còn 2.200.000'
-                        : 'Vui lòng quét QR thanh toán học phí'}
+                          ? 'Nhóm 2 người, phí đầu tư: 1.300.000 x 2 = 2.600.000, giảm còn 2.200.000'
+                          : 'Vui lòng quét QR thanh toán học phí'}
                     </h4>
 
                     <div className="relative group mx-auto w-full max-w-[240px] md:max-w-[280px]">
@@ -922,7 +922,7 @@ export default function Home() {
                 <span className="material-symbols-outlined text-2xl">bolt</span>
               </div>
               <p className="font-black text-slate-400 text-lg font-headline">Early Bird</p>
-              <p className="text-slate-500 text-xs mb-4">1 người · Đã kết thúc</p>
+              <p className="text-slate-400 text-xs mb-4">1 người · Đã kết thúc - Ngày 7/6/2026</p>
               <div className="mb-1">
                 <span className="inline-block px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-black rounded-md uppercase tracking-wider">Hết hạn</span>
               </div>
@@ -1160,8 +1160,8 @@ export default function Home() {
                       {modalPkg === 'Nhóm 4 người'
                         ? 'Nhóm 4 người, phí đầu tư: 1.300.000 x 4 = 5.200.000, giảm còn 3.960.000'
                         : modalPkg === 'Nhóm 2 người'
-                        ? 'Nhóm 2 người, phí đầu tư: 1.300.000 x 2 = 2.600.000, giảm còn 2.200.000'
-                        : 'Vui lòng quét mã QR để thanh toán học phí'}
+                          ? 'Nhóm 2 người, phí đầu tư: 1.300.000 x 2 = 2.600.000, giảm còn 2.200.000'
+                          : 'Vui lòng quét mã QR để thanh toán học phí'}
                     </p>
                   </div>
 
