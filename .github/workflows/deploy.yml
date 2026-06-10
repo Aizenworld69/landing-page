@@ -23,10 +23,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      # Cache Next.js build để tăng tốc lần build tiếp theo
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**/*.tsx', 'src/**/*.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       # Chỉ install nếu cache miss
       - name: Install dependencies
