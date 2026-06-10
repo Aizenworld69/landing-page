@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@react-pdf/renderer": "^4.5.1",
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.8.0",

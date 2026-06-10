@@ -5,7 +5,6 @@ import SidebarNav from '../SidebarNav';
 import AddVoucherModal from './AddVoucherModal';
 import EditVoucherModal from './EditVoucherModal';
 import DeleteVoucherButton from './DeleteVoucherButton';
-import ExportVoucherButton from './ExportVoucherButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,7 +111,6 @@ export default async function VouchersPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-right flex justify-end gap-2 items-center">
-                          <ExportVoucherButton voucher={voucher} />
                           <EditVoucherModal voucher={voucher} />
                           <DeleteVoucherButton code={voucher.code} />
                         </td>
