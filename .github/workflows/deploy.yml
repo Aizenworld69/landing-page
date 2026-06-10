@@ -39,7 +39,7 @@ jobs:
             npm install
             
             # Build dự án
-            npm run build
+            EXPERIMENTAL_CPUS=1 npm run build
             
             # Khởi động lại ứng dụng qua PM2
             pm2 reload landing-page || pm2 restart landing-page

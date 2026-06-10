@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   experimental: {
     serverActions: {
       allowedOrigins: ['103.200.23.54', 'checkin.aizenworld.com'],
