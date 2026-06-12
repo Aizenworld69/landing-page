@@ -105,25 +105,25 @@ if (process.env.NEXT_PHASE !== 'phase-production-build') {
   }
 
   // Thêm cột nếu chưa tồn tại (ALTER TABLE sẽ lỗi nếu cột đã có — bỏ qua)
-  try { db.exec('ALTER TABLE registrations ADD COLUMN referral TEXT'); } catch (_) {}
-  try { db.exec('ALTER TABLE registrations ADD COLUMN role TEXT'); } catch (_) {}
-  try { db.exec('ALTER TABLE registrations ADD COLUMN company TEXT'); } catch (_) {}
-  try { db.exec("ALTER TABLE registrations ADD COLUMN payment_status TEXT DEFAULT 'UNPAID'"); } catch (_) {}
-  try { db.exec('ALTER TABLE registrations ADD COLUMN payment_content TEXT'); } catch (_) {}
-  try { db.exec('ALTER TABLE registrations ADD COLUMN amount INTEGER DEFAULT 150000'); } catch (_) {}
-  try { db.exec('ALTER TABLE registrations ADD COLUMN members INTEGER DEFAULT 1'); } catch (_) {}
-  try { db.exec('ALTER TABLE registrations ADD COLUMN package_type TEXT DEFAULT \'\''); } catch (_) {}
-  try { db.exec('ALTER TABLE registrations ADD COLUMN course TEXT DEFAULT \'\''); } catch (_) {}
-  try { db.exec('ALTER TABLE registrations ADD COLUMN cohort_month TEXT DEFAULT \'\''); } catch (_) {}
-  try { db.exec('ALTER TABLE registrations ADD COLUMN voucher_code TEXT DEFAULT \'\''); } catch (_) {}
+  try { db.exec('ALTER TABLE registrations ADD COLUMN referral TEXT'); } catch (_) { }
+  try { db.exec('ALTER TABLE registrations ADD COLUMN role TEXT'); } catch (_) { }
+  try { db.exec('ALTER TABLE registrations ADD COLUMN company TEXT'); } catch (_) { }
+  try { db.exec("ALTER TABLE registrations ADD COLUMN payment_status TEXT DEFAULT 'UNPAID'"); } catch (_) { }
+  try { db.exec('ALTER TABLE registrations ADD COLUMN payment_content TEXT'); } catch (_) { }
+  try { db.exec('ALTER TABLE registrations ADD COLUMN amount INTEGER DEFAULT 150000'); } catch (_) { }
+  try { db.exec('ALTER TABLE registrations ADD COLUMN members INTEGER DEFAULT 1'); } catch (_) { }
+  try { db.exec('ALTER TABLE registrations ADD COLUMN package_type TEXT DEFAULT \'\''); } catch (_) { }
+  try { db.exec('ALTER TABLE registrations ADD COLUMN course TEXT DEFAULT \'\''); } catch (_) { }
+  try { db.exec('ALTER TABLE registrations ADD COLUMN cohort_month TEXT DEFAULT \'\''); } catch (_) { }
+  try { db.exec('ALTER TABLE registrations ADD COLUMN voucher_code TEXT DEFAULT \'\''); } catch (_) { }
 
   // Tối ưu hóa database bằng Indexes cho Production
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_phone ON registrations(phone)'); } catch (_) {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_email ON registrations(email)'); } catch (_) {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_created_at ON registrations(created_at)'); } catch (_) {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_voucher_code ON registrations(voucher_code)'); } catch (_) {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_group_members_registration_id ON group_members(registration_id)'); } catch (_) {}
-  try { db.exec('CREATE INDEX IF NOT EXISTS idx_courses_month ON courses(month)'); } catch (_) {}
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_phone ON registrations(phone)'); } catch (_) { }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_email ON registrations(email)'); } catch (_) { }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_created_at ON registrations(created_at)'); } catch (_) { }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_registrations_voucher_code ON registrations(voucher_code)'); } catch (_) { }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_group_members_registration_id ON group_members(registration_id)'); } catch (_) { }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_courses_month ON courses(month)'); } catch (_) { }
 
   // One-time migration: if an admin exists with a plain password (not bcrypt prefix),
   // replace it with a bcrypt hash. Safe to run multiple times.
