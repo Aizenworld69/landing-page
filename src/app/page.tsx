@@ -516,7 +516,7 @@ export default function Home() {
           >
             <Image
               src="/logocuoi.jpg"
-              alt="3 Logos - PTIT, PTTC, AIZEN"
+              alt="3 Logos - PTTC, PTTC, AIZEN"
               width={240}
               height={60}
               className="h-12 sm:h-16 w-auto object-contain"
