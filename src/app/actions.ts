@@ -97,16 +97,16 @@ export async function submitRegistration(formData: FormData): Promise<
 
     // Xác định số lượng thành viên và số tiền theo gói đăng ký
     let members = 2;
-    let amount = 2200000; // Nhóm 2 người: 1.100.000đ/học viên -> 2.200.000đ
+    let amount = 2700000; // Nhóm 2 người: 1.350.000đ/người -> 2.700.000đ
     if (packageType === 'Nhóm 4 người') {
       members = 4;
-      amount = 3960000; // Nhóm 4 người: 990.000đ/học viên -> 3.960.000đ
+      amount = 4760000; // Nhóm 4 người: 1.190.000đ/người -> 4.760.000đ
     } else if (packageType === 'Early Bird') {
       members = 1;
-      amount = 1300000; // Early Bird: 1.300.000đ
+      amount = 1190000; // Early Bird: 1.190.000đ
     } else if (packageType === '1 người') {
       members = 1;
-      amount = 1300000; // Gói 1 người thường: 1.300.000đ
+      amount = 1590000; // Gói 1 người: 1.590.000đ
     }
 
     // Xử lý mã giảm giá
@@ -227,13 +227,13 @@ export async function validateVoucherAction(code: string, packageType: string): 
     }
 
     // Xác định số tiền gốc theo packageType
-    let baseAmount = 1300000; // Mặc định gói "1 người"
+    let baseAmount = 1590000; // Mặc định gói "1 người"
     if (packageType === 'Nhóm 2 người') {
-      baseAmount = 2200000;
+      baseAmount = 2700000;
     } else if (packageType === 'Nhóm 4 người') {
-      baseAmount = 3960000;
+      baseAmount = 4760000;
     } else if (packageType === 'Early Bird') {
-      baseAmount = 950000;
+      baseAmount = 1190000;
     }
 
     const discountAmount = Math.round((baseAmount * voucher.discount_percent) / 100);
@@ -264,11 +264,11 @@ export async function submitGroupRegistration(formData: FormData): Promise<
     if (honeypot) return { success: false, error: 'Phát hiện hoạt động bất thường.' };
 
     let memberCount = 1;
-    let amountPerPerson = 1300000;
-    if (packageType === 'Nhóm 2 người') { memberCount = 2; amountPerPerson = 1100000; }
-    else if (packageType === 'Nhóm 4 người') { memberCount = 4; amountPerPerson = 990000; }
-    else if (packageType === 'Early Bird') { memberCount = 1; amountPerPerson = 950000; }
-    else if (packageType === '1 người') { memberCount = 1; amountPerPerson = 1300000; }
+    let amountPerPerson = 1590000;
+    if (packageType === 'Nhóm 2 người') { memberCount = 2; amountPerPerson = 1350000; }
+    else if (packageType === 'Nhóm 4 người') { memberCount = 4; amountPerPerson = 1190000; }
+    else if (packageType === 'Early Bird') { memberCount = 1; amountPerPerson = 1190000; }
+    else if (packageType === '1 người') { memberCount = 1; amountPerPerson = 1590000; }
 
     // Xử lý mã giảm giá (nếu có)
     const voucherCode = formData.get('voucher_code')?.toString().trim().toUpperCase() || '';

@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import Image from 'next/image';
 import { eventDate, eventAddress, eventPrice } from '../lib/siteConfig';
@@ -210,13 +210,24 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [mounted, setMounted] = useState(false);
 
+  // Popup state
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupTimeLeft, setPopupTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  // Early Bird slots
+  const [earlyBirdRemaining, setEarlyBirdRemaining] = useState<number | null>(null);
+
   // Scroll progress bar
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
-    const rafId = requestAnimationFrame(() => setMounted(true));
+    const rafId = requestAnimationFrame(() => {
+      setMounted(true);
+      setShowPopup(true);
+    });
     const target = new Date('2026-07-25T08:00:00+07:00').getTime();
+    const popupTarget = new Date('2026-07-05T23:59:59+07:00').getTime();
 
     const updateTime = () => {
       const now = new Date().getTime();
@@ -231,6 +242,18 @@ export default function Home() {
           seconds: Math.floor((difference % (1000 * 60)) / 1000)
         };
         setTimeLeft(timeData);
+      }
+
+      const popupDiff = popupTarget - now;
+      if (popupDiff <= 0) {
+        setPopupTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      } else {
+        setPopupTimeLeft({
+          days: Math.floor(popupDiff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((popupDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((popupDiff % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((popupDiff % (1000 * 60)) / 1000)
+        });
       }
     };
 
@@ -269,6 +292,23 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Fetch số suất Early Bird còn lại (real-time từ DB)
+  useEffect(() => {
+    const fetchSlots = async () => {
+      try {
+        const res = await fetch('/api/early-bird-slots');
+        const data = await res.json();
+        setEarlyBirdRemaining(data.remaining ?? 10);
+      } catch {
+        setEarlyBirdRemaining(10);
+      }
+    };
+    fetchSlots();
+    // Tự động cập nhật mỗi 10 giây
+    const slotInterval = setInterval(fetchSlots, 10000);
+    return () => clearInterval(slotInterval);
+  }, []);
+
   const handleAction = async (formData: FormData) => {
     setFormState('loading');
     const result = await submitRegistration(formData);
@@ -279,7 +319,7 @@ export default function Home() {
       setSubmittedName(sentName);
       setSubmittedPhone(sentPhone);
       setPaymentContent(result.paymentContent ?? 'HỌ TÊN - SĐT');
-      setPaymentAmount(result.amount ?? 2200000);
+      setPaymentAmount(result.amount ?? 2700000);
       setRegisteredPkg(result.packageType ?? 'Nhóm 2 người');
       setFormState('success');
       setMessage(result.message || 'Thành công!');
@@ -323,8 +363,9 @@ export default function Home() {
   const getQRImage = (pkg: string, hasVoucher?: boolean) => {
     if (pkg === 'Nhóm 2 người') return '/2nguoi.jpg';
     if (pkg === 'Nhóm 4 người') return '/4nguoi.jpg';
+    if (pkg === 'Early Bird') return '/img/Ma_EarlyBird.jpg';
     if (pkg === '1 người' && hasVoucher) return '/1nguoigiamgia.jpg';
-    return '/1nguoi.jpg'; // Early Bird + 1 người
+    return '/1nguoi.jpg'; // 1 người thường
   };
 
   const getMemberCount = (pkg: string) => {
@@ -414,8 +455,10 @@ export default function Home() {
                         : displayPkg === 'Nhóm 2 người'
                           ? 'Nhóm 2 người · 1.350.000đ/người · Tổng: 2.700.000đ'
                           : displayPkg === 'Early Bird'
-                            ? 'Early Bird (đến 5/7) · Tổng: 1.190.000đ'
-                            : 'Vui lòng quét QR thanh toán học phí'}
+                            ? 'Early Bird (đến 5/7/2026) · Tổng: 1.190.000đ'
+                            : displayPkg === '1 người'
+                              ? '1 người · Tổng: 1.590.000đ'
+                              : 'Vui lòng quét QR thanh toán học phí'}
                     </h4>
 
                     <div className="relative group mx-auto w-full max-w-[240px] md:max-w-[280px]">
@@ -429,13 +472,24 @@ export default function Home() {
                       )}
                       <div className="absolute -inset-1.5 bg-gradient-to-r from-orange-400 to-orange-400 rounded-2xl blur opacity-10 group-hover:opacity-20 transition duration-500"></div>
                       <div className="relative bg-white p-2.5 rounded-2xl border border-orange-100 shadow-lg">
-                        <Image
-                          src={`https://img.vietqr.io/image/TPB-00005895437-compact2.png?amount=${paymentAmount}&addInfo=${encodeURIComponent(paymentContent)}&accountName=${encodeURIComponent(submittedName || 'NGUYEN HOANG MINH')}`}
-                          alt="QR Thanh toán"
-                          width={280}
-                          height={280}
-                          className="w-full h-auto rounded-lg"
-                        />
+                        {registeredPkg === 'Early Bird' ? (
+                          <Image
+                            src="/img/Ma_EarlyBird.jpg"
+                            alt="QR Thanh toán Early Bird"
+                            width={280}
+                            height={280}
+                            className="w-full h-auto rounded-lg"
+                            unoptimized
+                          />
+                        ) : (
+                          <Image
+                            src={`https://img.vietqr.io/image/TPB-00005895437-compact2.png?amount=${paymentAmount}&addInfo=${encodeURIComponent(paymentContent)}&accountName=${encodeURIComponent(submittedName || 'NGUYEN HOANG MINH')}`}
+                            alt="QR Thanh toán"
+                            width={280}
+                            height={280}
+                            className="w-full h-auto rounded-lg"
+                          />
+                        )}
                       </div>
                     </div>
 
@@ -457,6 +511,139 @@ export default function Home() {
                   >
                     Đã hiểu
                   </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Popup Banner - hiện khi load trang */}
+      <AnimatePresence>
+        {showPopup && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPopup(false)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="relative w-full max-w-sm sm:max-w-md bg-[#0a1628] rounded-3xl shadow-2xl overflow-hidden border border-white/10"
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowPopup(false)}
+                className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+
+              {/* Poster Image */}
+              <div className="relative w-full">
+                <Image
+                  src="/Lam_chu_claude_ai.jpg"
+                  alt="Làm Chủ Claude AI - Khóa học"
+                  width={480}
+                  height={480}
+                  className="w-full h-auto object-contain"
+                  priority
+                />
+              </div>
+
+              {/* Countdown + CTA */}
+              <div className="px-5 py-4 relative overflow-hidden" style={{ backgroundImage: 'url(/backgoundTrangkhoahoc.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                <div className="absolute inset-0 bg-black/40 z-0" />
+                <div className="relative z-10">
+
+                {/* Giá gốc + giá ưu đãi */}
+                <div className="bg-white/5 border border-orange-500/20 rounded-2xl px-4 py-3 mb-3 text-center">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <span className="text-slate-500 line-through text-sm font-medium">Giá gốc: 1.590.000đ</span>
+                    <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-black uppercase rounded-full tracking-wider">Giảm 25%</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-slate-300 text-sm font-bold">Còn</span>
+                    <span className="text-orange-400 text-2xl font-black font-headline tracking-tight">1.190.000đ</span>
+                  </div>
+                  <p className="text-slate-400 text-[10px] mt-1">Tiết kiệm <span className="text-green-400 font-black">400.000đ</span> so với giá thường</p>
+                </div>
+
+                <p className="text-center text-[11px] font-black tracking-widest text-orange-400 uppercase mb-3">⏳ Ưu đãi Early Bird kết thúc sau</p>
+                <div className="flex items-center justify-center gap-2 mb-4 select-none">
+                  {[{ v: popupTimeLeft.days, l: 'Ngày' }, { v: popupTimeLeft.hours, l: 'Giờ' }, { v: popupTimeLeft.minutes, l: 'Phút' }, { v: popupTimeLeft.seconds, l: 'Giây' }].map((item, i, arr) => (
+                    <React.Fragment key={item.l}>
+                      <div className="flex flex-col items-center">
+                        <div className="w-14 h-14 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg">
+                          <span className={`text-2xl font-black font-headline ${i === 3 ? 'text-orange-400' : 'text-white'}`}>
+                            {String(item.v).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{item.l}</span>
+                      </div>
+                      {i < arr.length - 1 && <span className="text-xl font-black text-slate-500 -mt-4">:</span>}
+                    </React.Fragment>
+                  ))}
+                </div>
+
+                {/* Suất còn lại */}
+                <div className="mb-4 bg-white/5 border border-orange-500/20 rounded-2xl px-4 py-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-orange-400 text-base">bolt</span>
+                      <span className="text-white text-xs font-black uppercase tracking-wider">
+                        {earlyBirdRemaining === null
+                          ? 'Đang tải...'
+                          : earlyBirdRemaining === 0
+                            ? '🔴 Đã hết suất Early Bird!'
+                            : earlyBirdRemaining <= 3
+                              ? `⚠️ Chỉ còn ${earlyBirdRemaining} suất — Nhanh tay lên!`
+                              : `🔥 Còn lại ${earlyBirdRemaining}/10 suất Early Bird`}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${((10 - (earlyBirdRemaining ?? 10)) / 10) * 100}%` }}
+                      transition={{ duration: 0.8, ease: 'easeOut' }}
+                      className="h-full rounded-full"
+                      style={{
+                        background: earlyBirdRemaining === 0
+                          ? '#ef4444'
+                          : earlyBirdRemaining !== null && earlyBirdRemaining <= 3
+                            ? 'linear-gradient(to right, #f97316, #ef4444)'
+                            : 'linear-gradient(to right, #ea580c, #f97316)'
+                      }}
+                    />
+                  </div>
+                  {earlyBirdRemaining !== null && earlyBirdRemaining > 0 && (
+                    <p className="text-slate-400 text-[10px] mt-1.5 text-center">
+                      Nhanh tay nào các anh chị ơi! 🚀
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowPopup(false);
+                    setTimeout(() => {
+                      document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 200);
+                  }}
+                  className="w-full py-3.5 rounded-2xl font-headline font-black text-sm tracking-wider uppercase bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white shadow-lg shadow-orange-500/30 hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  Đăng Ký Ngay →
+                </button>
                 </div>
               </div>
             </motion.div>
@@ -514,14 +701,14 @@ export default function Home() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="flex flex-col items-center gap-4 mb-4"
+            className="flex flex-col items-center gap-2 mb-2"
           >
             <Image
-              src="/logocuoi.jpg"
-              alt="3 Logos - PTTC, PTTC, AIZEN"
-              width={240}
-              height={60}
-              className="h-12 sm:h-16 w-auto object-contain"
+              src="/icon.png"
+              alt="3 Logos - PTIT, PTTC, AIZEN"
+              width={700}
+              height={200}
+              className="h-32 sm:h-48 w-auto object-contain"
             />
           </motion.div>
 
@@ -944,7 +1131,7 @@ export default function Home() {
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0 }}
-              className="relative flex flex-col border border-white/10 rounded-3xl p-6 shadow-lg hover:shadow-orange-400/10 hover:-translate-y-1 transition-all"
+              className="relative flex flex-col border border-white/10 rounded-3xl p-8 shadow-lg hover:shadow-orange-400/10 hover:-translate-y-1 transition-all min-h-[420px]"
               style={{
                 backgroundImage: 'url(/backgoundTrangkhoahoc.jpg)',
                 backgroundSize: 'cover',
@@ -954,14 +1141,54 @@ export default function Home() {
               <motion.div
                 animate={{ y: [0, -3, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10"
+                className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5"
               >
+                <span className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-red-600 to-orange-500 text-white text-xs font-black uppercase tracking-wider rounded-full shadow-lg shadow-red-500/40 border border-red-400 whitespace-nowrap animate-pulse">
+                  ⚡ HOT
+                </span>
                 <span className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-[#0e2434] text-xs font-black uppercase tracking-wider rounded-full shadow-lg shadow-yellow-500/20 border border-yellow-300 whitespace-nowrap">
-                  Đến 5/7
+                  Đến 5/7/2026
                 </span>
               </motion.div>
               <p className="font-black text-white text-lg font-headline mt-4">Early Bird</p>
-              <p className="text-slate-400 text-xs mb-4">1 người · Ưu đãi sớm</p>
+              <p className="text-slate-400 text-xs mb-3">1 người · Ưu đãi sớm</p>
+
+              {/* Slots còn lại - real-time từ DB */}
+              <div className="mb-4 bg-white/5 border border-white/10 rounded-2xl p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-orange-400 text-sm">bolt</span>
+                    <span className="text-orange-400 text-[11px] font-black uppercase tracking-wider">Suất còn lại</span>
+                  </div>
+                  <span className="text-white font-black text-sm">
+                    {earlyBirdRemaining === null ? (
+                      <span className="text-slate-500">...</span>
+                    ) : earlyBirdRemaining === 0 ? (
+                      <span className="text-red-400">Hết suất</span>
+                    ) : (
+                      <><span className="text-orange-400 text-base">{earlyBirdRemaining}</span><span className="text-slate-400 text-xs">/10</span></>
+                    )}
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${((10 - (earlyBirdRemaining ?? 10)) / 10) * 100}%`,
+                      background: earlyBirdRemaining === 0
+                        ? '#ef4444'
+                        : earlyBirdRemaining !== null && earlyBirdRemaining <= 3
+                          ? 'linear-gradient(to right, #f97316, #ef4444)'
+                          : 'linear-gradient(to right, #ea580c, #f97316)'
+                    }}
+                  />
+                </div>
+                {earlyBirdRemaining !== null && earlyBirdRemaining <= 3 && earlyBirdRemaining > 0 && (
+                  <p className="text-red-400 text-[10px] font-black mt-1.5 uppercase tracking-wider">⚠ Sắp hết suất!</p>
+                )}
+              </div>
+
               <div className="mb-1 h-6 flex items-center">
                 <span className="px-2.5 py-0.5 bg-red-500 text-white text-[10px] font-black uppercase rounded-full tracking-wider">
                   Giảm 25%
@@ -985,7 +1212,7 @@ export default function Home() {
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.08 }}
-              className="relative flex flex-col border border-white/10 rounded-3xl p-6 shadow-lg hover:shadow-orange-400/10 hover:-translate-y-1 transition-all"
+              className="relative flex flex-col border border-white/10 rounded-3xl p-8 shadow-lg hover:shadow-orange-400/10 hover:-translate-y-1 transition-all min-h-[420px]"
               style={{
                 backgroundImage: 'url(/backgoundTrangkhoahoc.jpg)',
                 backgroundSize: 'cover',
@@ -1015,7 +1242,7 @@ export default function Home() {
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.16 }}
-              className="relative flex flex-col border-2 border-[#ea580c]/60 rounded-3xl p-6 shadow-xl shadow-orange-500/10 hover:-translate-y-1 transition-all"
+              className="relative flex flex-col border-2 border-[#ea580c]/60 rounded-3xl p-8 shadow-xl shadow-orange-500/10 hover:-translate-y-1 transition-all min-h-[420px]"
               style={{
                 backgroundImage: 'url(/backgoundTrangkhoahoc.jpg)',
                 backgroundSize: 'cover',
@@ -1056,7 +1283,7 @@ export default function Home() {
               whileInView={{ y: 0, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.24 }}
-              className="relative flex flex-col border border-white/10 rounded-3xl p-6 shadow-lg hover:shadow-orange-400/10 hover:-translate-y-1 transition-all"
+              className="relative flex flex-col border border-white/10 rounded-3xl p-8 shadow-lg hover:shadow-orange-400/10 hover:-translate-y-1 transition-all min-h-[420px]"
               style={{
                 backgroundImage: 'url(/backgoundTrangkhoahoc.jpg)',
                 backgroundSize: 'cover',
