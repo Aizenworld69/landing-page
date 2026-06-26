@@ -550,7 +550,7 @@ export default function Home() {
               {/* Scrollable Content Container */}
               <div className="flex-1 overflow-y-auto scrollbar-none flex flex-col">
                 {/* Poster Image */}
-                <div className="relative w-full flex-shrink-0 aspect-square">
+                <div className="relative w-full flex-shrink-0">
                   <Image
                     src="/Lam_chu_claude_ai.jpg"
                     alt="Làm Chủ Claude AI - Khóa học"
