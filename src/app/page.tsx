@@ -537,113 +537,116 @@ export default function Home() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 30 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="relative w-full max-w-sm sm:max-w-md bg-[#0a1628] rounded-3xl shadow-2xl overflow-hidden border border-white/10"
+              className="relative w-full max-w-[340px] sm:max-w-[380px] bg-[#0a1628] rounded-3xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh] overflow-hidden"
             >
               {/* Close button */}
               <button
                 onClick={() => setShowPopup(false)}
-                className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white hover:bg-black/70 transition-colors"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
 
-              {/* Poster Image */}
-              <div className="relative w-full">
-                <Image
-                  src="/Lam_chu_claude_ai.jpg"
-                  alt="Làm Chủ Claude AI - Khóa học"
-                  width={480}
-                  height={480}
-                  className="w-full h-auto object-contain"
-                  priority
-                />
-              </div>
-
-              {/* Countdown + CTA */}
-              <div className="px-5 py-4 relative overflow-hidden" style={{ backgroundImage: 'url(/backgoundTrangkhoahoc.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                <div className="absolute inset-0 bg-black/40 z-0" />
-                <div className="relative z-10">
-
-                {/* Giá gốc + giá ưu đãi */}
-                <div className="bg-white/5 border border-orange-500/20 rounded-2xl px-4 py-3 mb-3 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <span className="text-slate-500 line-through text-sm font-medium">Giá gốc: 1.590.000đ</span>
-                    <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-black uppercase rounded-full tracking-wider">Giảm 25%</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-slate-300 text-sm font-bold">Còn</span>
-                    <span className="text-orange-400 text-2xl font-black font-headline tracking-tight">1.190.000đ</span>
-                  </div>
-                  <p className="text-slate-400 text-[10px] mt-1">Tiết kiệm <span className="text-green-400 font-black">400.000đ</span> so với giá thường</p>
+              {/* Scrollable Content Container */}
+              <div className="flex-1 overflow-y-auto scrollbar-none flex flex-col">
+                {/* Poster Image */}
+                <div className="relative w-full flex-shrink-0 aspect-square">
+                  <Image
+                    src="/Lam_chu_claude_ai.jpg"
+                    alt="Làm Chủ Claude AI - Khóa học"
+                    width={480}
+                    height={480}
+                    className="w-full h-auto object-contain"
+                    priority
+                  />
                 </div>
 
-                <p className="text-center text-[11px] font-black tracking-widest text-orange-400 uppercase mb-3">⏳ Ưu đãi Early Bird kết thúc sau</p>
-                <div className="flex items-center justify-center gap-2 mb-4 select-none">
-                  {[{ v: popupTimeLeft.days, l: 'Ngày' }, { v: popupTimeLeft.hours, l: 'Giờ' }, { v: popupTimeLeft.minutes, l: 'Phút' }, { v: popupTimeLeft.seconds, l: 'Giây' }].map((item, i, arr) => (
-                    <React.Fragment key={item.l}>
-                      <div className="flex flex-col items-center">
-                        <div className="w-14 h-14 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg">
-                          <span className={`text-2xl font-black font-headline ${i === 3 ? 'text-orange-400' : 'text-white'}`}>
-                            {String(item.v).padStart(2, '0')}
+                {/* Countdown + CTA */}
+                <div className="px-4 py-3 relative overflow-hidden flex-shrink-0" style={{ backgroundImage: 'url(/backgoundTrangkhoahoc.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="absolute inset-0 bg-black/40 z-0" />
+                  <div className="relative z-10">
+
+                    {/* Giá gốc + giá ưu đãi */}
+                    <div className="bg-white/5 border border-orange-500/20 rounded-2xl px-3 py-2.5 mb-2.5 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-0.5">
+                        <span className="text-slate-500 line-through text-xs font-medium">Giá gốc: 1.590.000đ</span>
+                        <span className="px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-black uppercase rounded-full tracking-wider">Giảm 25%</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="text-slate-300 text-xs font-bold">Còn</span>
+                        <span className="text-orange-400 text-xl sm:text-2xl font-black font-headline tracking-tight">1.190.000đ</span>
+                      </div>
+                      <p className="text-slate-400 text-[9px] mt-0.5">Tiết kiệm <span className="text-green-400 font-black">400.000đ</span> so với giá thường</p>
+                    </div>
+
+                    <p className="text-center text-[10px] font-black tracking-widest text-orange-400 uppercase mb-2">⏳ Ưu đãi Early Bird kết thúc sau</p>
+                    <div className="flex items-center justify-center gap-1.5 mb-3 select-none">
+                      {[{ v: popupTimeLeft.days, l: 'Ngày' }, { v: popupTimeLeft.hours, l: 'Giờ' }, { v: popupTimeLeft.minutes, l: 'Phút' }, { v: popupTimeLeft.seconds, l: 'Giây' }].map((item, i, arr) => (
+                        <React.Fragment key={item.l}>
+                          <div className="flex flex-col items-center">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg">
+                              <span className={`text-xl sm:text-2xl font-black font-headline ${i === 3 ? 'text-orange-400' : 'text-white'}`}>
+                                {String(item.v).padStart(2, '0')}
+                              </span>
+                            </div>
+                            <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{item.l}</span>
+                          </div>
+                          {i < arr.length - 1 && <span className="text-lg font-black text-slate-500 -mt-4">:</span>}
+                        </React.Fragment>
+                      ))}
+                    </div>
+
+                    {/* Suất còn lại */}
+                    <div className="mb-3 bg-white/5 border border-orange-500/20 rounded-2xl px-3.5 py-2.5">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-orange-400 text-sm">bolt</span>
+                          <span className="text-white text-[10px] font-black uppercase tracking-wider">
+                            {earlyBirdRemaining === null
+                              ? 'Đang tải...'
+                              : earlyBirdRemaining === 0
+                                ? '🔴 Đã hết suất Early Bird!'
+                                : earlyBirdRemaining <= 3
+                                  ? `⚠️ Chỉ còn ${earlyBirdRemaining} suất!`
+                                  : `🔥 Còn ${earlyBirdRemaining}/10 suất Early Bird`}
                           </span>
                         </div>
-                        <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{item.l}</span>
                       </div>
-                      {i < arr.length - 1 && <span className="text-xl font-black text-slate-500 -mt-4">:</span>}
-                    </React.Fragment>
-                  ))}
-                </div>
-
-                {/* Suất còn lại */}
-                <div className="mb-4 bg-white/5 border border-orange-500/20 rounded-2xl px-4 py-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-orange-400 text-base">bolt</span>
-                      <span className="text-white text-xs font-black uppercase tracking-wider">
-                        {earlyBirdRemaining === null
-                          ? 'Đang tải...'
-                          : earlyBirdRemaining === 0
-                            ? '🔴 Đã hết suất Early Bird!'
-                            : earlyBirdRemaining <= 3
-                              ? `⚠️ Chỉ còn ${earlyBirdRemaining} suất — Nhanh tay lên!`
-                              : `🔥 Còn lại ${earlyBirdRemaining}/10 suất Early Bird`}
-                      </span>
+                      {/* Progress bar */}
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${((10 - (earlyBirdRemaining ?? 10)) / 10) * 100}%` }}
+                          transition={{ duration: 0.8, ease: 'easeOut' }}
+                          className="h-full rounded-full"
+                          style={{
+                            background: earlyBirdRemaining === 0
+                              ? '#ef4444'
+                              : earlyBirdRemaining !== null && earlyBirdRemaining <= 3
+                                ? 'linear-gradient(to right, #f97316, #ef4444)'
+                                : 'linear-gradient(to right, #ea580c, #f97316)'
+                          }}
+                        />
+                      </div>
+                      {earlyBirdRemaining !== null && earlyBirdRemaining > 0 && (
+                        <p className="text-slate-400 text-[9px] mt-1 text-center">
+                          Nhanh tay nào các anh chị ơi! 🚀
+                        </p>
+                      )}
                     </div>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${((10 - (earlyBirdRemaining ?? 10)) / 10) * 100}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className="h-full rounded-full"
-                      style={{
-                        background: earlyBirdRemaining === 0
-                          ? '#ef4444'
-                          : earlyBirdRemaining !== null && earlyBirdRemaining <= 3
-                            ? 'linear-gradient(to right, #f97316, #ef4444)'
-                            : 'linear-gradient(to right, #ea580c, #f97316)'
-                      }}
-                    />
-                  </div>
-                  {earlyBirdRemaining !== null && earlyBirdRemaining > 0 && (
-                    <p className="text-slate-400 text-[10px] mt-1.5 text-center">
-                      Nhanh tay nào các anh chị ơi! 🚀
-                    </p>
-                  )}
-                </div>
 
-                <button
-                  onClick={() => {
-                    setShowPopup(false);
-                    setTimeout(() => {
-                      document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 200);
-                  }}
-                  className="w-full py-3.5 rounded-2xl font-headline font-black text-sm tracking-wider uppercase bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white shadow-lg shadow-orange-500/30 hover:scale-[1.02] active:scale-95 transition-all"
-                >
-                  Đăng Ký Ngay →
-                </button>
+                    <button
+                      onClick={() => {
+                        setShowPopup(false);
+                        setTimeout(() => {
+                          document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' });
+                        }, 200);
+                      }}
+                      className="w-full py-2.5 sm:py-3.5 rounded-2xl font-headline font-black text-xs sm:text-sm tracking-wider uppercase bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white shadow-lg shadow-orange-500/30 hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      Đăng Ký Ngay →
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
