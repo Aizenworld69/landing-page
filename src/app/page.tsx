@@ -215,7 +215,8 @@ export default function Home() {
   const [popupTimeLeft, setPopupTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   // Check if Early Bird is expired (past 2026-07-05T23:59:59+07:00)
-  const isEarlyBirdExpired = mounted ? (new Date().getTime() >= new Date('2026-07-05T23:59:59+07:00').getTime()) : false;
+  const earlyBirdDeadline = new Date('2026-07-05T23:59:59+07:00').getTime();
+  const isEarlyBirdExpired = mounted ? (new Date().getTime() >= earlyBirdDeadline) : false;
 
   // Early Bird slots
   const [earlyBirdRemaining, setEarlyBirdRemaining] = useState<number | null>(null);
@@ -225,17 +226,11 @@ export default function Home() {
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
   useEffect(() => {
-    const isExpired = new Date().getTime() >= new Date('2026-07-05T23:59:59+07:00').getTime();
     const rafId = requestAnimationFrame(() => {
       setMounted(true);
-      if (!isExpired) {
-        setShowPopup(true);
-      } else {
-        setShowPopup(false);
-      }
+      setShowPopup(true);
     });
     const target = new Date('2026-07-25T08:00:00+07:00').getTime();
-    const popupTarget = new Date('2026-07-05T23:59:59+07:00').getTime();
 
     const updateTime = () => {
       const now = new Date().getTime();
@@ -252,10 +247,10 @@ export default function Home() {
         setTimeLeft(timeData);
       }
 
+      const popupTarget = new Date('2026-07-05T23:59:59+07:00').getTime();
       const popupDiff = popupTarget - now;
       if (popupDiff <= 0) {
         setPopupTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        setShowPopup(false);
       } else {
         setPopupTimeLeft({
           days: Math.floor(popupDiff / (1000 * 60 * 60 * 24)),
@@ -529,7 +524,7 @@ export default function Home() {
 
       {/* Popup Banner - hiện khi load trang */}
       <AnimatePresence>
-        {!isEarlyBirdExpired && showPopup && (
+        {showPopup && (
           <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
             {/* Backdrop */}
             <motion.div
@@ -570,78 +565,111 @@ export default function Home() {
                   />
                 </div>
 
-                {/* Countdown + CTA */}
-                <div className="px-4 py-3 relative overflow-hidden flex-shrink-0" style={{ backgroundImage: 'url(/backgoundTrangkhoahoc.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                  <div className="absolute inset-0 bg-black/40 z-0" />
-                  <div className="relative z-10">
+                {/* Nội dung thay đổi theo ngày */}
+                {!isEarlyBirdExpired ? (
+                  /* === TRƯỚC 5/7: Early Bird content === */
+                  <div className="px-4 py-3 relative overflow-hidden flex-shrink-0" style={{ backgroundImage: 'url(/backgoundTrangkhoahoc.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                    <div className="absolute inset-0 bg-black/40 z-0" />
+                    <div className="relative z-10">
+                      {/* Giá gốc + giá ưu đãi */}
+                      <div className="bg-white/5 border border-orange-500/20 rounded-2xl px-3 py-2.5 mb-2.5 text-center">
+                        <div className="flex items-center justify-center gap-2 mb-0.5">
+                          <span className="text-slate-500 line-through text-xs font-medium">Giá gốc: 1.590.000đ</span>
+                          <span className="px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-black uppercase rounded-full tracking-wider">Giảm 25%</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className="text-slate-300 text-xs font-bold">Còn</span>
+                          <span className="text-orange-400 text-xl sm:text-2xl font-black font-headline tracking-tight">1.190.000đ</span>
+                        </div>
+                        <p className="text-slate-400 text-[9px] mt-0.5">Tiết kiệm <span className="text-green-400 font-black">400.000đ</span> so với giá thường</p>
+                      </div>
 
-                    {/* Giá gốc + giá ưu đãi */}
-                    <div className="bg-white/5 border border-orange-500/20 rounded-2xl px-3 py-2.5 mb-2.5 text-center">
-                      <div className="flex items-center justify-center gap-2 mb-0.5">
-                        <span className="text-slate-500 line-through text-xs font-medium">Giá gốc: 1.590.000đ</span>
-                        <span className="px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-black uppercase rounded-full tracking-wider">Giảm 25%</span>
+                      <p className="text-center text-[10px] font-black tracking-widest text-orange-400 uppercase mb-2">⏳ Ưu đãi Early Bird kết thúc sau</p>
+                      <div className="flex items-center justify-center gap-1.5 mb-3 select-none">
+                        {[{ v: popupTimeLeft.days, l: 'Ngày' }, { v: popupTimeLeft.hours, l: 'Giờ' }, { v: popupTimeLeft.minutes, l: 'Phút' }, { v: popupTimeLeft.seconds, l: 'Giây' }].map((item, i, arr) => (
+                          <React.Fragment key={item.l}>
+                            <div className="flex flex-col items-center">
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg">
+                                <span className={`text-xl sm:text-2xl font-black font-headline ${i === 3 ? 'text-orange-400' : 'text-white'}`}>
+                                  {String(item.v).padStart(2, '0')}
+                                </span>
+                              </div>
+                              <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{item.l}</span>
+                            </div>
+                            {i < arr.length - 1 && <span className="text-lg font-black text-slate-500 -mt-4">:</span>}
+                          </React.Fragment>
+                        ))}
                       </div>
-                      <div className="flex items-center justify-center gap-1.5">
-                        <span className="text-slate-300 text-xs font-bold">Còn</span>
-                        <span className="text-orange-400 text-xl sm:text-2xl font-black font-headline tracking-tight">1.190.000đ</span>
+
+                      {/* Suất còn lại */}
+                      <div className="mb-3 bg-white/5 border border-orange-500/20 rounded-2xl px-3.5 py-2.5">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-orange-400 text-sm">bolt</span>
+                            <span className="text-white text-[10px] font-black uppercase tracking-wider">
+                              {earlyBirdRemaining === null
+                                ? 'Đang tải...'
+                                : earlyBirdRemaining === 0
+                                  ? '🔴 Đã hết suất Early Bird!'
+                                  : earlyBirdRemaining <= 3
+                                    ? `⚠️ Chỉ còn ${earlyBirdRemaining} suất!`
+                                    : `🔥 Còn ${earlyBirdRemaining}/10 suất Early Bird`}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${((10 - (earlyBirdRemaining ?? 10)) / 10) * 100}%` }}
+                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                            className="h-full rounded-full"
+                            style={{
+                              background: earlyBirdRemaining === 0
+                                ? '#ef4444'
+                                : earlyBirdRemaining !== null && earlyBirdRemaining <= 3
+                                  ? 'linear-gradient(to right, #f97316, #ef4444)'
+                                  : 'linear-gradient(to right, #ea580c, #f97316)'
+                            }}
+                          />
+                        </div>
+                        {earlyBirdRemaining !== null && earlyBirdRemaining > 0 && (
+                          <p className="text-slate-400 text-[9px] mt-1 text-center">
+                            Nhanh tay nào các anh chị ơi! 🚀
+                          </p>
+                        )}
                       </div>
-                      <p className="text-slate-400 text-[9px] mt-0.5">Tiết kiệm <span className="text-green-400 font-black">400.000đ</span> so với giá thường</p>
+
+                      <button
+                        onClick={() => {
+                          setShowPopup(false);
+                          setTimeout(() => {
+                            document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' });
+                          }, 200);
+                        }}
+                        className="w-full py-2.5 sm:py-3.5 rounded-2xl font-headline font-black text-xs sm:text-sm tracking-wider uppercase bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white shadow-lg shadow-orange-500/30 hover:scale-[1.02] active:scale-95 transition-all"
+                      >
+                        Đăng Ký Ngay →
+                      </button>
                     </div>
-
-                    <p className="text-center text-[10px] font-black tracking-widest text-orange-400 uppercase mb-2">⏳ Ưu đãi Early Bird kết thúc sau</p>
-                    <div className="flex items-center justify-center gap-1.5 mb-3 select-none">
-                      {[{ v: popupTimeLeft.days, l: 'Ngày' }, { v: popupTimeLeft.hours, l: 'Giờ' }, { v: popupTimeLeft.minutes, l: 'Phút' }, { v: popupTimeLeft.seconds, l: 'Giây' }].map((item, i, arr) => (
+                  </div>
+                ) : (
+                  /* === SAU 5/7: Khai giảng content === */
+                  <div className="px-5 py-5 flex flex-col items-center">
+                    <p className="text-center text-sm font-black tracking-widest text-[#2563eb] uppercase mb-3">KHAI GIẢNG SAU</p>
+                    <div className="flex items-center justify-center gap-2 mb-4 select-none">
+                      {[{ v: timeLeft.days, l: 'Ngày' }, { v: timeLeft.hours, l: 'Giờ' }, { v: timeLeft.minutes, l: 'Phút' }, { v: timeLeft.seconds, l: 'Giây' }].map((item, i, arr) => (
                         <React.Fragment key={item.l}>
                           <div className="flex flex-col items-center">
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 border border-white/20 rounded-xl flex items-center justify-center shadow-lg">
-                              <span className={`text-xl sm:text-2xl font-black font-headline ${i === 3 ? 'text-orange-400' : 'text-white'}`}>
+                            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#dbeafe] rounded-xl flex items-center justify-center shadow">
+                              <span className="text-2xl sm:text-3xl font-black font-headline text-[#1d4ed8]">
                                 {String(item.v).padStart(2, '0')}
                               </span>
                             </div>
-                            <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase tracking-wider">{item.l}</span>
+                            <span className="text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-wider">{item.l}</span>
                           </div>
-                          {i < arr.length - 1 && <span className="text-lg font-black text-slate-500 -mt-4">:</span>}
+                          {i < arr.length - 1 && <span className="text-xl font-black text-slate-400 -mt-5">:</span>}
                         </React.Fragment>
                       ))}
-                    </div>
-
-                    {/* Suất còn lại */}
-                    <div className="mb-3 bg-white/5 border border-orange-500/20 rounded-2xl px-3.5 py-2.5">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-orange-400 text-sm">bolt</span>
-                          <span className="text-white text-[10px] font-black uppercase tracking-wider">
-                            {earlyBirdRemaining === null
-                              ? 'Đang tải...'
-                              : earlyBirdRemaining === 0
-                                ? '🔴 Đã hết suất Early Bird!'
-                                : earlyBirdRemaining <= 3
-                                  ? `⚠️ Chỉ còn ${earlyBirdRemaining} suất!`
-                                  : `🔥 Còn ${earlyBirdRemaining}/10 suất Early Bird`}
-                          </span>
-                        </div>
-                      </div>
-                      {/* Progress bar */}
-                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${((10 - (earlyBirdRemaining ?? 10)) / 10) * 100}%` }}
-                          transition={{ duration: 0.8, ease: 'easeOut' }}
-                          className="h-full rounded-full"
-                          style={{
-                            background: earlyBirdRemaining === 0
-                              ? '#ef4444'
-                              : earlyBirdRemaining !== null && earlyBirdRemaining <= 3
-                                ? 'linear-gradient(to right, #f97316, #ef4444)'
-                                : 'linear-gradient(to right, #ea580c, #f97316)'
-                          }}
-                        />
-                      </div>
-                      {earlyBirdRemaining !== null && earlyBirdRemaining > 0 && (
-                        <p className="text-slate-400 text-[9px] mt-1 text-center">
-                          Nhanh tay nào các anh chị ơi! 🚀
-                        </p>
-                      )}
                     </div>
 
                     <button
@@ -651,12 +679,12 @@ export default function Home() {
                           document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' });
                         }, 200);
                       }}
-                      className="w-full py-2.5 sm:py-3.5 rounded-2xl font-headline font-black text-xs sm:text-sm tracking-wider uppercase bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white shadow-lg shadow-orange-500/30 hover:scale-[1.02] active:scale-95 transition-all"
+                      className="w-full py-3 rounded-2xl font-headline font-black text-sm tracking-wider uppercase bg-[#1d4ed8] text-white shadow-lg hover:bg-[#1e40af] hover:scale-[1.02] active:scale-95 transition-all"
                     >
-                      Đăng Ký Ngay →
+                      Đăng ký Ngay →
                     </button>
                   </div>
-                </div>
+                )}
               </div>
             </motion.div>
           </div>
