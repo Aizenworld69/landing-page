@@ -601,43 +601,7 @@ export default function Home() {
                         ))}
                       </div>
 
-                      {/* Suất còn lại */}
-                      <div className="mb-3 bg-white/5 border border-orange-500/20 rounded-2xl px-3.5 py-2.5">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-orange-400 text-sm">bolt</span>
-                            <span className="text-white text-[10px] font-black uppercase tracking-wider">
-                              {earlyBirdRemaining === null
-                                ? 'Đang tải...'
-                                : earlyBirdRemaining === 0
-                                  ? '🔴 Đã hết suất Early Bird!'
-                                  : earlyBirdRemaining <= 3
-                                    ? `⚠️ Chỉ còn ${earlyBirdRemaining} suất!`
-                                    : `🔥 Còn ${earlyBirdRemaining}/10 suất Early Bird`}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${((10 - (earlyBirdRemaining ?? 10)) / 10) * 100}%` }}
-                            transition={{ duration: 0.8, ease: 'easeOut' }}
-                            className="h-full rounded-full"
-                            style={{
-                              background: earlyBirdRemaining === 0
-                                ? '#ef4444'
-                                : earlyBirdRemaining !== null && earlyBirdRemaining <= 3
-                                  ? 'linear-gradient(to right, #f97316, #ef4444)'
-                                  : 'linear-gradient(to right, #ea580c, #f97316)'
-                            }}
-                          />
-                        </div>
-                        {earlyBirdRemaining !== null && earlyBirdRemaining > 0 && (
-                          <p className="text-slate-400 text-[9px] mt-1 text-center">
-                            Nhanh tay nào các anh chị ơi! 🚀
-                          </p>
-                        )}
-                      </div>
+
 
                       <button
                         onClick={() => {
@@ -1193,41 +1157,7 @@ export default function Home() {
               <p className="font-black text-white text-lg font-headline mt-4">Early Bird</p>
               <p className="text-slate-400 text-xs mb-3">1 người · Ưu đãi sớm</p>
 
-              {/* Slots còn lại - real-time từ DB */}
-              <div className="mb-4 bg-white/5 border border-white/10 rounded-2xl p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-orange-400 text-sm">bolt</span>
-                    <span className="text-orange-400 text-[11px] font-black uppercase tracking-wider">Suất còn lại</span>
-                  </div>
-                  <span className="text-white font-black text-sm">
-                    {earlyBirdRemaining === null ? (
-                      <span className="text-slate-500">...</span>
-                    ) : earlyBirdRemaining === 0 ? (
-                      <span className="text-red-400">Hết suất</span>
-                    ) : (
-                      <><span className="text-orange-400 text-base">{earlyBirdRemaining}</span><span className="text-slate-400 text-xs">/10</span></>
-                    )}
-                  </span>
-                </div>
-                {/* Progress bar */}
-                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${((10 - (earlyBirdRemaining ?? 10)) / 10) * 100}%`,
-                      background: earlyBirdRemaining === 0
-                        ? '#ef4444'
-                        : earlyBirdRemaining !== null && earlyBirdRemaining <= 3
-                          ? 'linear-gradient(to right, #f97316, #ef4444)'
-                          : 'linear-gradient(to right, #ea580c, #f97316)'
-                    }}
-                  />
-                </div>
-                {earlyBirdRemaining !== null && earlyBirdRemaining <= 3 && earlyBirdRemaining > 0 && (
-                  <p className="text-red-400 text-[10px] font-black mt-1.5 uppercase tracking-wider">⚠ Sắp hết suất!</p>
-                )}
-              </div>
+
 
               <div className="mb-1 h-6 flex items-center">
                 <span className="px-2.5 py-0.5 bg-red-500 text-white text-[10px] font-black uppercase rounded-full tracking-wider">

@@ -1,11 +1,23 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 import bcrypt from 'bcryptjs';
 
-const db = new Database(path.join(process.cwd(), 'registrations.db'), {
+// Production: DB nằm trong /app/data/ (được mount volume)
+// Development: DB nằm trong root project
+const dbDir = process.env.DATABASE_DIR || process.cwd();
+// Đảm bảo thư mục tồn tại (quan trọng cho lần đầu deploy)
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+const dbPath = path.join(dbDir, 'registrations.db');
+
+const db = new Database(dbPath, {
   timeout: 20000 // Tăng timeout lên 20 giây để giảm thiểu lỗi SQLITE_BUSY
 });
 db.pragma('journal_mode = WAL');
+// Tự động checkpoint WAL khi > 1000 pages để tránh WAL phình to
+db.pragma('wal_autocheckpoint = 1000');
 
 // Bỏ qua việc tạo bảng/seeds/indexes khi đang chạy Next.js Build Phase
 // (Để tránh việc 10 Next.js build workers cùng lúc ghi vào file DB gây khóa)

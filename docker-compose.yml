@@ -7,5 +7,9 @@ services:
     restart: always
     ports:
       - "20000:20000"
+    environment:
+      - DATABASE_DIR=/app/data
     volumes:
-      - /opt/landing-page/registrations.db:/app/registrations.db
+      # Mount cả thư mục data thay vì từng file riêng lẻ
+      # Tránh lỗi Docker tạo thư mục thay vì file khi host chưa có file
+      - /opt/landing-page/data:/app/data

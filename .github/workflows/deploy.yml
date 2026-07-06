@@ -51,48 +51,70 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           command_timeout: 30m
           script: |
-            # ── BƯỚC 0: Backup DB NGAY ĐẦU TIÊN trước mọi thao tác ──────────────
-            # Backup cả 3 file SQLite (WAL mode) để không mất data đang trong transaction
-            echo "==> Đang sao lưu database..."
-            for ext in "" "-wal" "-shm"; do
-              src="/opt/landing-page/registrations.db${ext}"
-              dst="/opt/registrations_backup.db${ext}"
-              if [ -f "$src" ]; then
-                cp "$src" "$dst"
-                echo "    Đã backup: $src"
-              fi
-            done
+            DATA_DIR="/opt/landing-page/data"
+            BACKUP_DIR="/opt/landing-page/backup"
 
-            # ── BƯỚC 1: Đảm bảo git repo tồn tại ────────────────────────────────
-            if [ ! -d "/opt/landing-page/.git" ]; then
-              echo "==> Git repo không tìm thấy, đang clone lại..."
-              rm -rf /opt/landing-page
-              git clone https://github.com/Aizenworld69/landing-page.git /opt/landing-page
+            # ── BƯỚC 0: Checkpoint WAL và dừng container an toàn ────────────────
+            echo "==> Đang checkpoint WAL trước khi dừng container..."
+            # Chạy checkpoint trong container nếu đang chạy
+            docker exec landing-page sh -c \
+              "sqlite3 /app/data/registrations.db 'PRAGMA wal_checkpoint(TRUNCATE);'" \
+              2>/dev/null || true
+
+            echo "==> Đang dừng container..."
+            docker stop landing-page 2>/dev/null || true
+            # Đợi container dừng hẳn
+            docker wait landing-page 2>/dev/null || true
+
+            # ── BƯỚC 1: Backup toàn bộ thư mục data ─────────────────────────────
+            echo "==> Đang sao lưu database..."
+            mkdir -p "$BACKUP_DIR"
+            if [ -f "$DATA_DIR/registrations.db" ]; then
+              # Dùng sqlite3 để tạo backup sạch (merge WAL vào .db chính)
+              sqlite3 "$DATA_DIR/registrations.db" \
+                ".backup '$BACKUP_DIR/registrations.db'" 2>/dev/null || \
+                cp "$DATA_DIR/registrations.db" "$BACKUP_DIR/registrations.db"
+              echo "    Đã backup DB vào $BACKUP_DIR"
+            else
+              echo "    Không có DB cũ, bỏ qua backup"
             fi
 
-            # ── BƯỚC 2: Cập nhật code mới nhất ──────────────────────────────────
-            echo "==> Đang cập nhật code..."
-            cd /opt/landing-page
-            git reset --hard
-            git clean -fd
-            git pull origin main
+            # ── BƯỚC 2: Đảm bảo thư mục data tồn tại ───────────────────────────
+            mkdir -p "$DATA_DIR"
 
-            # ── BƯỚC 3: Khôi phục database từ backup ─────────────────────────────
+            # ── BƯỚC 3: Khôi phục database từ backup ────────────────────────────
             echo "==> Đang khôi phục database..."
-            for ext in "" "-wal" "-shm"; do
-              src="/opt/registrations_backup.db${ext}"
-              dst="/opt/landing-page/registrations.db${ext}"
-              if [ -f "$src" ]; then
-                cp "$src" "$dst"
-                echo "    Đã khôi phục: $dst"
+            if [ -f "$BACKUP_DIR/registrations.db" ]; then
+              cp "$BACKUP_DIR/registrations.db" "$DATA_DIR/registrations.db"
+              # Xóa WAL/SHM cũ (đã được merge vào .db bởi sqlite3 .backup)
+              rm -f "$DATA_DIR/registrations.db-wal"
+              rm -f "$DATA_DIR/registrations.db-shm"
+              echo "    Đã khôi phục DB sạch (không có WAL/SHM)"
+            else
+              # Lần đầu deploy: tạo file DB trống
+              if [ ! -f "$DATA_DIR/registrations.db" ]; then
+                touch "$DATA_DIR/registrations.db"
+                echo "    Tạo mới file DB (lần đầu deploy)"
               fi
-            done
+            fi
 
-            # Đảm bảo file .db tồn tại (tránh Docker mount nhầm thành thư mục)
-            touch /opt/landing-page/registrations.db
+            # ── BƯỚC 4: Pull image mới và khởi động container ───────────────────
+            echo "==> Đang pull image mới..."
+            # Đảm bảo docker-compose.yml tồn tại trên server
+            if [ ! -f "/opt/landing-page/docker-compose.yml" ]; then
+              echo "==> Không tìm thấy docker-compose.yml, đang tải về..."
+              mkdir -p /opt/landing-page
+              curl -fsSL \
+                "https://raw.githubusercontent.com/Aizenworld69/landing-page/main/docker-compose.yml" \
+                -o /opt/landing-page/docker-compose.yml
+            else
+              # Cập nhật docker-compose.yml mới nhất
+              curl -fsSL \
+                "https://raw.githubusercontent.com/Aizenworld69/landing-page/main/docker-compose.yml" \
+                -o /opt/landing-page/docker-compose.yml
+            fi
 
-            # ── BƯỚC 4: Deploy container mới ─────────────────────────────────────
-            echo "==> Đang deploy container..."
+            cd /opt/landing-page
             docker logout ghcr.io || true
             docker compose pull
             docker compose up -d --remove-orphans

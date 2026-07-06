@@ -26,6 +26,9 @@ ENV NODE_ENV=production
 ENV PORT=20000
 ENV HOSTNAME="0.0.0.0"
 
+# Cài sqlite3 CLI để deploy script có thể checkpoint WAL trước khi backup
+RUN apk add --no-cache sqlite
+
 # Copy the standalone output and assets
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
