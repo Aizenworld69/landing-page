@@ -206,17 +206,22 @@ export default function Home() {
     }
   };
 
-  // Countdown target: 2026-07-25T08:00:00+07:00
+  // Countdown target: 2026-07-22T23:59:59+07:00
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [mounted, setMounted] = useState(false);
 
   // Popup state
   const [showPopup, setShowPopup] = useState(false);
   const [popupTimeLeft, setPopupTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [regDeadlineTimeLeft, setRegDeadlineTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   // Check if Early Bird is expired (past 2026-07-05T23:59:59+07:00)
   const earlyBirdDeadline = new Date('2026-07-05T23:59:59+07:00').getTime();
   const isEarlyBirdExpired = mounted ? (new Date().getTime() >= earlyBirdDeadline) : false;
+
+  // Check if past July 9th, 2026 09:00:00+07:00
+  const slotsThresholdTime = new Date('2026-07-09T09:00:00+07:00').getTime();
+  const isAfterSlotsThreshold = mounted ? (new Date().getTime() >= slotsThresholdTime) : false;
 
   // Early Bird slots
   const [earlyBirdRemaining, setEarlyBirdRemaining] = useState<number | null>(null);
@@ -230,7 +235,7 @@ export default function Home() {
       setMounted(true);
       setShowPopup(true);
     });
-    const target = new Date('2026-07-25T08:00:00+07:00').getTime();
+    const target = new Date('2026-07-22T23:59:59+07:00').getTime();
 
     const updateTime = () => {
       const now = new Date().getTime();
@@ -257,6 +262,19 @@ export default function Home() {
           hours: Math.floor((popupDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
           minutes: Math.floor((popupDiff % (1000 * 60 * 60)) / (1000 * 60)),
           seconds: Math.floor((popupDiff % (1000 * 60)) / 1000)
+        });
+      }
+
+      const regDeadlineTarget = new Date('2026-07-22T23:59:59+07:00').getTime();
+      const regDeadlineDiff = regDeadlineTarget - now;
+      if (regDeadlineDiff <= 0) {
+        setRegDeadlineTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      } else {
+        setRegDeadlineTimeLeft({
+          days: Math.floor(regDeadlineDiff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((regDeadlineDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((regDeadlineDiff % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((regDeadlineDiff % (1000 * 60)) / 1000)
         });
       }
     };
@@ -619,9 +637,18 @@ export default function Home() {
                 ) : (
                   /* === SAU 5/7: Khai giảng content === */
                   <div className="px-5 py-5 flex flex-col items-center">
-                    <p className="text-center text-sm font-black tracking-widest text-[#2563eb] uppercase mb-3">KHAI GIẢNG SAU</p>
+                    {/* Badge "Chỉ còn 15 suất" nằm ở trên */}
+                    <div className="mb-3 px-4 py-1.5 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/40 rounded-full flex items-center gap-2 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.25)]">
+                      <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+                      <span className="text-[10px] sm:text-xs font-black uppercase text-red-400 tracking-wider">
+                        {isAfterSlotsThreshold ? 'Chỉ còn 10 suất' : 'Chỉ còn 15 suất'}
+                      </span>
+                    </div>
+
+                    {/* Hạn đăng ký nằm ở dưới */}
+                    <p className="text-center text-sm font-black tracking-widest text-[#2563eb] uppercase mb-4">Hạn đăng ký</p>
                     <div className="flex items-center justify-center gap-2 mb-4 select-none">
-                      {[{ v: timeLeft.days, l: 'Ngày' }, { v: timeLeft.hours, l: 'Giờ' }, { v: timeLeft.minutes, l: 'Phút' }, { v: timeLeft.seconds, l: 'Giây' }].map((item, i, arr) => (
+                      {[{ v: regDeadlineTimeLeft.days, l: 'Ngày' }, { v: regDeadlineTimeLeft.hours, l: 'Giờ' }, { v: regDeadlineTimeLeft.minutes, l: 'Phút' }, { v: regDeadlineTimeLeft.seconds, l: 'Giây' }].map((item, i, arr) => (
                         <React.Fragment key={item.l}>
                           <div className="flex flex-col items-center">
                             <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#dbeafe] rounded-xl flex items-center justify-center shadow">
@@ -828,7 +855,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col items-center w-full"
           >
-            <p className="text-xs sm:text-sm font-black tracking-widest text-white uppercase mb-4">KHAI GIẢNG SAU</p>
+            <p className="text-xs sm:text-sm font-black tracking-widest text-white uppercase mb-4">Hạn đăng ký</p>
             <div className="flex items-center gap-2 sm:gap-4 select-none">
               {/* Days */}
               <div className="flex flex-col items-center">
