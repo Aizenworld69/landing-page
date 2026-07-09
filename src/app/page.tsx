@@ -1166,6 +1166,13 @@ export default function Home() {
             </div>
           </motion.div>
 
+          {/* Claude AI Pro License Notice Box */}
+          <div className="flex justify-start mb-8 pl-2">
+            <p className="text-sm text-slate-300 italic">
+              * Giá trên chưa bao gồm phí license Claude AI Pro
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
 
             {/* Card 1: Early Bird */}
@@ -1703,6 +1710,9 @@ export default function Home() {
                         <span>Tổng thanh toán:</span>
                         <span className="text-[#ea580c]">{paymentAmount.toLocaleString('vi-VN')}đ</span>
                       </div>
+                      <p className="text-xs text-slate-300 italic text-left mt-2">
+                        * Giá trên chưa bao gồm phí license Claude AI Pro
+                      </p>
                     </div>
 
                     {/* Error */}
