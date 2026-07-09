@@ -118,7 +118,13 @@ export async function submitRegistration(formData: FormData): Promise<
     let discountPercent = 0;
     if (voucherCode) {
       const nowUtc = new Date().toISOString().replace('T', ' ').substring(0, 19);
-      const voucher = db.prepare('SELECT * FROM vouchers WHERE code = ?').get(voucherCode) as any;
+      const voucher = db.prepare('SELECT * FROM vouchers WHERE code = ?').get(voucherCode) as {
+        expires_at: string;
+        used_count: number;
+        max_uses: number;
+        applicable_package: string;
+        discount_percent: number;
+      } | undefined;
       if (!voucher) {
         return { success: false, error: 'Mã giảm giá không tồn tại.' };
       }
@@ -286,7 +292,13 @@ export async function submitGroupRegistration(formData: FormData): Promise<
     let discountPercent = 0;
     if (voucherCode) {
       const nowUtc = new Date().toISOString().replace('T', ' ').substring(0, 19);
-      const voucher = db.prepare('SELECT * FROM vouchers WHERE code = ?').get(voucherCode) as any;
+      const voucher = db.prepare('SELECT * FROM vouchers WHERE code = ?').get(voucherCode) as {
+        expires_at: string;
+        used_count: number;
+        max_uses: number;
+        applicable_package: string;
+        discount_percent: number;
+      } | undefined;
       if (!voucher) {
         return { success: false, error: 'Mã giảm giá không tồn tại.' };
       }

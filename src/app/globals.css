@@ -53,6 +53,31 @@
   --color-inverse-on-surface: #9a9d9f;
   --color-primary-fixed-dim: #fb923c;
 
+  /* Theme extensions for Portal */
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-navy: #0f172a;
+  --color-navy-800: #1e293b;
+  --spacing-4_5: 1.125rem;
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.45); }
+    50% { box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); }
+  }
+  @keyframes pulse-glow-urgent {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5); }
+    50% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+  }
+  @keyframes ping-slow {
+    75%, 100% { transform: scale(2); opacity: 0; }
+  }
+  --animate-pulse-glow: pulse-glow 2.2s ease-in-out infinite;
+  --animate-pulse-glow-urgent: pulse-glow-urgent 1.4s ease-in-out infinite;
+  --animate-ping-slow: ping-slow 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+
   --font-headline: Manrope, sans-serif;
   --font-body: Inter, sans-serif;
   --font-label: Inter, sans-serif;

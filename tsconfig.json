@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@aizen/types": ["./src/types/portal.ts"]
     }
   },
   "include": [

@@ -25,42 +25,29 @@ export default function AddManualModal({ coursesList = [] }: { coursesList?: Cou
     Array<{ fullname: string; phone: string; email: string; role: string; company: string }>
   >([]);
 
-  // Set default registration date to now (local time)
-  useEffect(() => {
-    if (isOpen) {
-      const now = new Date();
-      const tzOffset = now.getTimezoneOffset() * 60000; // offset in milliseconds
-      const localISOTime = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
-      setRegistrationDate(localISOTime);
-      
-      // Reset logic states
-      setPackageType('Standard');
-      setMembers(1);
-      setAmount(150000);
-      setIsAmountManuallyEdited(false);
-      setMemberDetails([]);
-      setError('');
-    }
-  }, [isOpen]);
-
-  // Update memberDetails when members count changes
-  useEffect(() => {
-    const newDetails = Array(members)
-      .fill(null)
-      .map((_, i) => memberDetails[i] || { fullname: '', phone: '', email: '', role: '', company: '' });
-    setMemberDetails(newDetails);
-  }, [members]);
-
-  // Recalculate amount if package or members change, unless manually edited
-  useEffect(() => {
-    if (!isAmountManuallyEdited) {
-      const pricePerPackage = packageType === 'VIP' ? 300000 : 150000;
-      setAmount(pricePerPackage * members);
-    }
-  }, [packageType, members, isAmountManuallyEdited]);
+  const openModal = () => {
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000; // offset in milliseconds
+    const localISOTime = new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+    setRegistrationDate(localISOTime);
+    
+    // Reset logic states
+    setPackageType('Standard');
+    setMembers(1);
+    setAmount(150000);
+    setIsAmountManuallyEdited(false);
+    setMemberDetails([]);
+    setError('');
+    setIsOpen(true);
+  };
 
   const handlePackageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPackageType(e.target.value);
+    const nextPkg = e.target.value;
+    setPackageType(nextPkg);
+    if (!isAmountManuallyEdited) {
+      const pricePerPackage = nextPkg === 'VIP' ? 300000 : 150000;
+      setAmount(pricePerPackage * members);
+    }
   };
 
   const handleMemberChange = (index: number, field: string, value: string) => {
@@ -70,11 +57,29 @@ export default function AddManualModal({ coursesList = [] }: { coursesList?: Cou
   };
 
   const incrementMembers = () => {
-    setMembers((prev) => prev + 1);
+    const nextMembers = members + 1;
+    setMembers(nextMembers);
+    const newDetails = Array(nextMembers)
+      .fill(null)
+      .map((_, i) => memberDetails[i] || { fullname: '', phone: '', email: '', role: '', company: '' });
+    setMemberDetails(newDetails);
+    if (!isAmountManuallyEdited) {
+      const pricePerPackage = packageType === 'VIP' ? 300000 : 150000;
+      setAmount(pricePerPackage * nextMembers);
+    }
   };
 
   const decrementMembers = () => {
-    setMembers((prev) => (prev > 1 ? prev - 1 : 1));
+    const nextMembers = members > 1 ? members - 1 : 1;
+    setMembers(nextMembers);
+    const newDetails = Array(nextMembers)
+      .fill(null)
+      .map((_, i) => memberDetails[i] || { fullname: '', phone: '', email: '', role: '', company: '' });
+    setMemberDetails(newDetails);
+    if (!isAmountManuallyEdited) {
+      const pricePerPackage = packageType === 'VIP' ? 300000 : 150000;
+      setAmount(pricePerPackage * nextMembers);
+    }
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,7 +115,7 @@ export default function AddManualModal({ coursesList = [] }: { coursesList?: Cou
       {/* Nút mở modal */}
       <button
         id="add-manual-btn"
-        onClick={() => setIsOpen(true)}
+        onClick={openModal}
         className="flex items-center gap-1.5 px-4 py-2 bg-[#1a7a5e] hover:bg-[#135c46] text-white rounded-lg text-sm font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
       >
         <span className="material-symbols-outlined text-[18px]">add</span>

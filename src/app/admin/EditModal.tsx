@@ -47,25 +47,15 @@ export default function EditModal({ registration: reg, coursesList = [] }: EditM
   const [isAmountManuallyEdited, setIsAmountManuallyEdited] = useState(false);
   const [registrationDate, setRegistrationDate] = useState('');
 
-  // Prefill states when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setPackageType(reg.package_type || 'Standard');
-      setMembers(reg.members || 1);
-      setAmount(reg.amount ?? 150000);
-      setIsAmountManuallyEdited(false);
-      setRegistrationDate(formatDbDateForInput(reg.created_at));
-      setError('');
-    }
-  }, [isOpen, reg]);
-
-  // Recalculate amount if package or members change, unless manually edited
-  useEffect(() => {
-    if (isOpen && !isAmountManuallyEdited) {
-      const pricePerPackage = packageType === 'VIP' ? 300000 : 150000;
-      setAmount(pricePerPackage * members);
-    }
-  }, [packageType, members, isAmountManuallyEdited, isOpen]);
+  const openModal = () => {
+    setPackageType(reg.package_type || 'Standard');
+    setMembers(reg.members || 1);
+    setAmount(reg.amount ?? 150000);
+    setIsAmountManuallyEdited(false);
+    setRegistrationDate(formatDbDateForInput(reg.created_at));
+    setError('');
+    setIsOpen(true);
+  };
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -80,15 +70,30 @@ export default function EditModal({ registration: reg, coursesList = [] }: EditM
   }, [isOpen]);
 
   const handlePackageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPackageType(e.target.value);
+    const nextPkg = e.target.value;
+    setPackageType(nextPkg);
+    if (!isAmountManuallyEdited) {
+      const pricePerPackage = nextPkg === 'VIP' ? 300000 : 150000;
+      setAmount(pricePerPackage * members);
+    }
   };
 
   const incrementMembers = () => {
-    setMembers((prev) => prev + 1);
+    const nextMembers = members + 1;
+    setMembers(nextMembers);
+    if (!isAmountManuallyEdited) {
+      const pricePerPackage = packageType === 'VIP' ? 300000 : 150000;
+      setAmount(pricePerPackage * nextMembers);
+    }
   };
 
   const decrementMembers = () => {
-    setMembers((prev) => (prev > 1 ? prev - 1 : 1));
+    const nextMembers = members > 1 ? members - 1 : 1;
+    setMembers(nextMembers);
+    if (!isAmountManuallyEdited) {
+      const pricePerPackage = packageType === 'VIP' ? 300000 : 150000;
+      setAmount(pricePerPackage * nextMembers);
+    }
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,7 +122,7 @@ export default function EditModal({ registration: reg, coursesList = [] }: EditM
     <>
       {/* Trigger Button */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={openModal}
         title="Chỉnh sửa thông tin khách hàng"
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95 cursor-pointer"
       >

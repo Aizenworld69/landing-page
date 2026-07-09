@@ -14,12 +14,25 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'img.vietqr.io',
       },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+      },
     ],
   },
   typescript: {
     ignoreBuildErrors: true,
   },
   experimental: {
+    optimizePackageImports: ['framer-motion', 'date-fns', 'lucide-react'],
     serverActions: {
       allowedOrigins: ['103.200.23.54', 'checkin.aizenworld.com'],
     },

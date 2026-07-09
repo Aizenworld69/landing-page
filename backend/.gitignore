@@ -1,0 +1,6 @@
+# local ignore for NestJS backend
+node_modules/
+dist/
+.turbo/
+.env
+*.tsbuildinfo
