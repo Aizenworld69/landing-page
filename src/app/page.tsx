@@ -641,7 +641,7 @@ export default function Home() {
                     <div className="mb-3 px-4 py-1.5 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/40 rounded-full flex items-center gap-2 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.25)]">
                       <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
                       <span className="text-[10px] sm:text-xs font-black uppercase text-red-400 tracking-wider">
-                        {isAfterSlotsThreshold ? 'Chỉ còn 10 suất' : 'Chỉ còn 15 suất'}
+                        {isAfterSlotsThreshold ? 'Chỉ còn 5 suất' : 'Chỉ còn 15 suất'}
                       </span>
                     </div>
 
@@ -1162,7 +1162,7 @@ export default function Home() {
             className="flex justify-center mb-12 animate-pulse"
           >
             <div className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 text-slate-950 px-8 py-4 sm:px-12 sm:py-5 rounded-2xl shadow-[0_0_30px_rgba(250,204,21,0.4)] font-headline font-black text-2xl sm:text-4xl uppercase tracking-wider border-4 border-yellow-300 flex items-baseline justify-center gap-1.5 select-none w-full max-w-lg">
-              Chỉ Còn <span className="text-5xl sm:text-7xl font-headline font-black text-slate-950 mx-1">{isAfterSlotsThreshold ? '10' : '15'}</span> Suất
+              Chỉ Còn <span className="text-5xl sm:text-7xl font-headline font-black text-slate-950 mx-1">{isAfterSlotsThreshold ? '5' : '15'}</span> Suất
             </div>
           </motion.div>
 
