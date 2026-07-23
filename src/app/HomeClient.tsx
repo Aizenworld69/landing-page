@@ -1148,17 +1148,7 @@ export default function HomeClient({ initialPopupConfig }: { initialPopupConfig:
             Chọn hình thức đăng ký
           </h2>
 
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="flex justify-center mb-12 animate-pulse"
-          >
-            <div className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 text-slate-950 px-8 py-4 sm:px-12 sm:py-5 rounded-2xl shadow-[0_0_30px_rgba(250,204,21,0.4)] font-headline font-black text-2xl sm:text-4xl uppercase tracking-wider border-4 border-yellow-300 flex items-baseline justify-center gap-1.5 select-none w-full max-w-lg">
-              Chỉ Còn <span className="text-5xl sm:text-7xl font-headline font-black text-slate-950 mx-1">{isAfterSlotsThreshold ? '5' : '15'}</span> Suất
-            </div>
-          </motion.div>
+
 
           {/* Claude AI Pro License Notice Box */}
           <div className="flex justify-start mb-8 pl-2">

@@ -51,7 +51,7 @@ export function CourseCard({ course, showActions = true, isNearestUpcoming = fal
               </span>
             ) : (
               <span className="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 backdrop-blur-md font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider">
-                ĐÃ HOÀN THÀNH
+                ĐÃ DIỄN RA
               </span>
             )}
           </div>
