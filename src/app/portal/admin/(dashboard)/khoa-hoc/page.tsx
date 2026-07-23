@@ -13,6 +13,7 @@ import {
   getActivePromos,
 } from '@/lib/portal/admin/api';
 import type { Course, CourseFormInput, CourseStatus, InstructorOption, CourseModuleInput, ActivePromoMap } from '@/lib/portal/admin/api';
+import { compressImage } from '@/lib/image-compression';
 
 const LIMIT = 10;
 
@@ -170,16 +171,16 @@ export default function KhoaHocPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setQrUploadError((prev) => ({ ...prev, [field]: 'Kích thước ảnh không được vượt quá 5MB' }));
-      return;
-    }
-
     setQrUploading((prev) => ({ ...prev, [field]: true }));
     setQrUploadError((prev) => ({ ...prev, [field]: '' }));
 
     try {
-      const publicUrl = await uploadCourseThumbnail(file);
+      const compressed = await compressImage(file);
+      if (compressed.size > 5 * 1024 * 1024) {
+        setQrUploadError((prev) => ({ ...prev, [field]: 'Kích thước ảnh sau nén vẫn vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.' }));
+        return;
+      }
+      const publicUrl = await uploadCourseThumbnail(compressed);
       setForm((f) => ({ ...f, [field]: publicUrl }));
     } catch (err) {
       console.error(`QR Upload failed for ${field}:`, err);
@@ -214,16 +215,16 @@ export default function KhoaHocPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('Kích thước ảnh không được vượt quá 5MB');
-      return;
-    }
-
     setUploading(true);
     setUploadError('');
 
     try {
-      const publicUrl = await uploadCourseThumbnail(file);
+      const compressed = await compressImage(file);
+      if (compressed.size > 5 * 1024 * 1024) {
+        setUploadError('Kích thước ảnh sau nén vẫn vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.');
+        return;
+      }
+      const publicUrl = await uploadCourseThumbnail(compressed);
       setForm((f) => ({ ...f, thumbnail_url: publicUrl }));
     } catch (err) {
       console.error('Upload failed:', err);

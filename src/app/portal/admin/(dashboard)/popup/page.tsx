@@ -5,6 +5,7 @@ import { getPopupConfigAction, updatePopupConfigAction, uploadPopupImageAction, 
 import PromoPopup from '@/components/PromoPopup';
 import { apiClient } from '@/lib/portal/api/api-client';
 import { PopupDescEditor } from '@/components/portal/admin/PopupDescEditor';
+import { compressImage } from '@/lib/image-compression';
 
 interface CourseOption {
   id: string;
@@ -119,8 +120,9 @@ export default function PortalAdminPopupPage() {
     setMessage(null);
 
     try {
+      const compressed = await compressImage(file);
       const uploadData = new FormData();
-      uploadData.append('file', file);
+      uploadData.append('file', compressed);
 
       const res = await uploadPopupImageAction(uploadData);
 
@@ -152,8 +154,9 @@ export default function PortalAdminPopupPage() {
     setIsBgUploading(true);
     setMessage(null);
     try {
+      const compressed = await compressImage(file);
       const uploadData = new FormData();
-      uploadData.append('file', file);
+      uploadData.append('file', compressed);
       const res = await uploadPopupImageAction(uploadData);
       if (res.success && res.url) {
         setFormData((prev) => ({ ...prev, bg_image_url: res.url }));

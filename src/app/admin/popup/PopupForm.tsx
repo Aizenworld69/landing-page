@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { updatePopupConfigAction, uploadPopupImageAction, PopupConfig } from '@/app/actions';
 import PromoPopup from '@/components/PromoPopup';
+import { compressImage } from '@/lib/image-compression';
 
 interface PopupFormProps {
   initialConfig: PopupConfig;
@@ -98,8 +99,9 @@ export default function PopupForm({ initialConfig }: PopupFormProps) {
     setMessage(null);
 
     try {
+      const compressed = await compressImage(file);
       const uploadData = new FormData();
-      uploadData.append('file', file);
+      uploadData.append('file', compressed);
 
       const res = await uploadPopupImageAction(uploadData);
 
@@ -132,8 +134,9 @@ export default function PopupForm({ initialConfig }: PopupFormProps) {
     setMessage(null);
 
     try {
+      const compressed = await compressImage(file);
       const uploadData = new FormData();
-      uploadData.append('file', file);
+      uploadData.append('file', compressed);
 
       const res = await uploadPopupImageAction(uploadData);
 

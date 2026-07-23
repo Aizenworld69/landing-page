@@ -261,10 +261,11 @@ export async function getInstructorOptions(): Promise<InstructorOption[]> {
   return adminFetch<InstructorOption[]>('/instructors');
 }
 
-export async function uploadCourseThumbnail(file: File): Promise<string> {
+export async function uploadAdminImage(file: File, bucket: 'courses' | 'blogs' = 'blogs'): Promise<string> {
   const token = getAdminToken();
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('bucket', bucket);
 
   const res = await fetch(`${BASE}/courses/upload`, {
     method: 'POST',
@@ -285,6 +286,10 @@ export async function uploadCourseThumbnail(file: File): Promise<string> {
 
   const envelope = json as ApiEnvelope<string>;
   return envelope.data !== undefined ? envelope.data : (json as string);
+}
+
+export async function uploadCourseThumbnail(file: File): Promise<string> {
+  return uploadAdminImage(file, 'courses');
 }
 
 export interface CourseModuleInput {

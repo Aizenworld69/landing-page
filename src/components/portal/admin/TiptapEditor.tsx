@@ -10,7 +10,8 @@ import Highlight from "@tiptap/extension-highlight";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { getSupabaseClient } from "@/lib/portal/supabase-client";
+import { compressImage } from "@/lib/image-compression";
+import { uploadAdminImage } from "@/lib/portal/admin/api";
 
 interface TiptapEditorProps {
   content: string;
@@ -22,16 +23,9 @@ export const BLOG_IMAGE_DRAG_TYPE = "application/x-aizen-image";
 
 /* ─── Upload image to Supabase ───────────────────────────────────────── */
 export async function uploadImage(file: File): Promise<string> {
-  if (!file.type.startsWith("image/")) throw new Error("Not an image");
-  const supabase = getSupabaseClient();
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const path = `blog-images/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { error } = await supabase.storage
-    .from("blogs")
-    .upload(path, file, { cacheControl: "3600", upsert: false });
-  if (error) throw error;
-  const { data } = supabase.storage.from("blogs").getPublicUrl(path);
-  return data.publicUrl;
+  if (!file.type.startsWith("image/")) throw new Error("File được chọn không phải là hình ảnh");
+  const compressed = await compressImage(file);
+  return await uploadAdminImage(compressed, "blogs");
 }
 
 /* ─── UI helpers ─────────────────────────────────────────────────────── */

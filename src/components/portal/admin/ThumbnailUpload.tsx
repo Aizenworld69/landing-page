@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { getSupabaseClient } from "@/lib/portal/supabase-client";
+import { compressImage } from "@/lib/image-compression";
+import { uploadAdminImage } from "@/lib/portal/admin/api";
 
 interface ThumbnailUploadProps {
   value: string;
@@ -17,21 +18,12 @@ export function ThumbnailUpload({ value, onChange }: ThumbnailUploadProps) {
     if (!file.type.startsWith("image/")) return;
     setUploading(true);
     try {
-      const supabase = getSupabaseClient();
-      const ext = file.name.split(".").pop();
-      const path = `blog-thumbnails/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error } = await supabase.storage
-        .from("blogs")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
-
-      if (error) throw error;
-
-      const { data } = supabase.storage.from("blogs").getPublicUrl(path);
-      onChange(data.publicUrl);
+      const compressed = await compressImage(file);
+      const publicUrl = await uploadAdminImage(compressed, "blogs");
+      onChange(publicUrl);
     } catch (err) {
       console.error("Upload thumbnail failed:", err);
-      alert("Upload ảnh thất bại. Vui lòng thử lại.");
+      alert(err instanceof Error ? err.message : "Upload ảnh thất bại. Vui lòng thử lại.");
     } finally {
       setUploading(false);
     }
