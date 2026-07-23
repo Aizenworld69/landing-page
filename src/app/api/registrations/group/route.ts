@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin, successResponse, errorResponse } from '@/lib/portal/supabase-server';
 import { applyCode } from '@/lib/portal/promo-codes';
+import { checkRateLimit, getClientIp } from '@/lib/portal/rate-limit';
 import { randomUUID } from 'crypto';
 
 async function verifyCourse(courseId: string) {
@@ -76,6 +77,11 @@ async function sendLarkGroup(params: {
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    if (!checkRateLimit(clientIp, 'registrations', 5, 60_000)) {
+      return errorResponse('Bạn đã gửi quá nhiều yêu cầu đăng ký. Vui lòng thử lại sau ít phút.', 429, req.nextUrl.pathname);
+    }
+
     const body = await req.json();
     const { course_id, referral, promoCode, members } = body;
 

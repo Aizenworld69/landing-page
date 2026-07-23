@@ -12,6 +12,9 @@ node_modules/
 
 # testing
 coverage/
+tests/
+vitest.config.ts
+tsconfig.test.json
 
 # next.js and nest.js build outputs
 .next/
@@ -31,6 +34,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+build_output.txt
 
 # env files (can opt-in for committing if needed)
 .env*

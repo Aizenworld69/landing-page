@@ -45,6 +45,16 @@ const NAV = [
       </svg>
     ),
   },
+  {
+    href: '/portal/admin/popup',
+    label: 'Popup Quảng cáo',
+    icon: (
+      <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10.34 15.84c-.012-.15-.02-.3-.02-.45 0-2.07 1.35-3.83 3.23-4.44l-8.7-8.7A1.5 1.5 0 003.35 3.75v13.5A1.5 1.5 0 004.85 18.75h13.5a1.5 1.5 0 001.5-1.5v-1.41l-9.51-9.5z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 9v3.75m0 3.75h.008v.008H12v-.008z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

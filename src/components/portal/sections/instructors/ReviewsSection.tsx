@@ -5,7 +5,6 @@ interface ReviewsSectionProps {
   reviews?: Review[];
 }
 
-// Static fallback reviews khi chưa có data
 const DEMO_REVIEWS = [
   {
     id: '1',
@@ -34,36 +33,36 @@ const DEMO_REVIEWS = [
 ];
 
 export function ReviewsSection({ reviews }: ReviewsSectionProps) {
-  const displayReviews = DEMO_REVIEWS; // swap to `reviews` khi có real data
+  const displayReviews = DEMO_REVIEWS;
 
   return (
-    <section className="bg-[#F8FAFC] py-16">
+    <section className="bg-transparent py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <p className="text-primary-500 text-sm font-semibold uppercase tracking-widest mb-2">
+          <p className="text-amber-400 text-xs font-extrabold uppercase tracking-widest mb-2">
             Phản hồi
           </p>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+          <h2 className="text-2xl md:text-4xl font-black text-white drop-shadow-md">
             Học viên nói gì về AIZEN?
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {displayReviews.map((review) => (
-            <div key={review.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+            <div key={review.id} className="bg-slate-900/85 backdrop-blur-xl border border-slate-700/80 rounded-3xl p-6 shadow-2xl hover:border-amber-400/80 transition-all">
               <div className="flex mb-3">
                 {Array.from({ length: review.rating }).map((_, i) => (
-                  <span key={i} className="text-amber-400">★</span>
+                  <span key={i} className="text-amber-400 text-lg">★</span>
                 ))}
               </div>
-              <p className="text-gray-700 text-sm leading-relaxed mb-5">&quot;{review.content}&quot;</p>
-              <div className="flex items-center gap-3 border-t border-gray-50 pt-4">
-                <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-sm flex-shrink-0">
+              <p className="text-slate-200 text-sm leading-relaxed mb-5 font-medium">&quot;{review.content}&quot;</p>
+              <div className="flex items-center gap-3 border-t border-slate-800 pt-4">
+                <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-extrabold text-sm flex-shrink-0">
                   {review.author[0]}
                 </div>
                 <div>
-                  <p className="font-semibold text-sm text-gray-900">{review.author}</p>
-                  <p className="text-xs text-gray-400">{review.role}</p>
+                  <p className="font-bold text-sm text-white">{review.author}</p>
+                  <p className="text-xs text-amber-400 font-semibold">{review.role}</p>
                 </div>
               </div>
             </div>
@@ -71,7 +70,9 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
         </div>
 
         <div className="text-center">
-          <Button variant="outline">Xem thêm đánh giá</Button>
+          <Button variant="outline" className="border-white/40 text-white bg-slate-900/80 backdrop-blur-md hover:bg-slate-800 hover:border-amber-400 hover:text-amber-300 font-bold px-6 py-2.5 rounded-full cursor-pointer">
+            Xem thêm đánh giá
+          </Button>
         </div>
       </div>
     </section>

@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { Navbar } from '@/components/portal/common/Navbar';
-import { Footer } from '@/components/portal/common/Footer';
 import { CareerRoadmapSection } from '@/components/portal/sections/home/CareerRoadmapSection';
 
 export const metadata: Metadata = {
@@ -10,12 +8,8 @@ export const metadata: Metadata = {
 
 export default function LearningPathPage() {
   return (
-    <>
-      <Navbar />
-      <main>
-        <CareerRoadmapSection />
-      </main>
-      <Footer />
-    </>
+    <div className="py-8">
+      <CareerRoadmapSection />
+    </div>
   );
 }

@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   output: "standalone",
   allowedDevOrigins: ['103.200.23.54', 'checkin.aizenworld.com'],
   images: {
-    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -27,9 +26,6 @@ const nextConfig: NextConfig = {
         hostname: 'raw.githubusercontent.com',
       },
     ],
-  },
-  typescript: {
-    ignoreBuildErrors: true,
   },
   experimental: {
     optimizePackageImports: ['framer-motion', 'date-fns', 'lucide-react'],

@@ -1,19 +1,9 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin, verifyAdmin, successResponse, errorResponse } from '@/lib/portal/supabase-server';
+import { adjustCourseStatus } from '@/lib/portal/utils/course';
+import { invalidateCoursesServerCache } from '@/lib/portal/server-data';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function adjustCourseStatus(course: any) {
-  if (course.status === 'completed' || !course.start_date) return course;
-
-  const today = new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const startDateStr = course.start_date.slice(0, 10);
-
-  if (startDateStr < today) {
-    return { ...course, status: 'completed' };
-  }
-  return course;
-}
 
 export async function GET(
   req: NextRequest,
@@ -23,58 +13,47 @@ export async function GET(
     const { idOrSlug } = await params;
     const isUuid = UUID_REGEX.test(idOrSlug);
 
-    if (isUuid) {
-      // Admin GET by ID
-      const admin = await verifyAdmin(req);
-      if (!admin) {
-        return errorResponse('Quyền truy cập bị từ chối', 403, req.nextUrl.pathname);
-      }
+    const query = supabaseAdmin
+      .from('courses')
+      .select(`
+        *,
+        course_modules (
+          id,
+          title,
+          subtitle,
+          description,
+          duration_minutes,
+          order_index,
+          start_time,
+          item_type
+        ),
+        instructors (id, name, title, avatar_url, bio)
+      `)
+      .order('order_index', { referencedTable: 'course_modules', ascending: true });
 
-      const { data, error } = await supabaseAdmin
-        .from('courses')
-        .select('*')
-        .eq('id', idOrSlug)
-        .single();
+    let { data, error } = isUuid
+      ? await query.eq('id', idOrSlug).single()
+      : await query.eq('slug', idOrSlug).single();
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return errorResponse('Không tìm thấy khóa học', 404, req.nextUrl.pathname);
-        }
-        throw error;
-      }
+    if (error || !data) {
+      if (error?.code === 'PGRST116' || !data) {
+        // Fallback: try querying without joins in case join relation is missing
+        const simpleQuery = supabaseAdmin.from('courses').select('*');
+        const simpleRes = isUuid
+          ? await simpleQuery.eq('id', idOrSlug).single()
+          : await simpleQuery.eq('slug', idOrSlug).single();
 
-      return successResponse(adjustCourseStatus(data));
-    } else {
-      // Public GET by Slug
-      const { data, error } = await supabaseAdmin
-        .from('courses')
-        .select(`
-          *,
-          course_modules (
-            id,
-            title,
-            subtitle,
-            description,
-            duration_minutes,
-            order_index,
-            start_time,
-            item_type
-          ),
-          instructors (id, name, title, avatar_url, bio)
-        `)
-        .eq('slug', idOrSlug)
-        .order('order_index', { referencedTable: 'course_modules', ascending: true })
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
+        if (simpleRes.data) {
+          data = { ...simpleRes.data, course_modules: [], instructors: null };
+        } else {
           return errorResponse('Khóa học không tồn tại', 404, req.nextUrl.pathname);
         }
+      } else {
         throw error;
       }
-
-      return successResponse(adjustCourseStatus(data));
     }
+
+    return successResponse(adjustCourseStatus(data));
   } catch (err) {
     console.error('GET /api/courses/[idOrSlug] error:', err);
     return errorResponse(err instanceof Error ? err.message : 'Internal Server Error', 500, req.nextUrl.pathname);
@@ -100,12 +79,56 @@ export async function PATCH(
 
     const body = await req.json();
 
-    const { data, error } = await supabaseAdmin
+    // Strip non-column/read-only/computed properties before updating Supabase
+    const {
+      id: _id,
+      created_at: _created_at,
+      instructors: _instructors,
+      course_modules: _course_modules,
+      ...cleanBody
+    } = body;
+
+    let { data, error } = await supabaseAdmin
       .from('courses')
-      .update(body)
+      .update(cleanBody)
       .eq('id', idOrSlug)
       .select()
       .single();
+
+    // If Supabase schema cache lacks new columns (PGRST204), fallback by moving new fields to plans_config._meta
+    if (error && error.code === 'PGRST204') {
+      console.warn('[PATCH /api/courses] Schema column missing (PGRST204), falling back to plans_config._meta:', error.message);
+
+      const extraMeta: Record<string, any> = {};
+      const retryBody: Record<string, any> = { ...cleanBody };
+
+      ['schedule_time', 'location', 'location_url'].forEach((field) => {
+        if (field in retryBody) {
+          extraMeta[field] = retryBody[field];
+          delete retryBody[field];
+        }
+      });
+
+      if (Object.keys(extraMeta).length > 0) {
+        retryBody.plans_config = {
+          ...(retryBody.plans_config || {}),
+          _meta: {
+            ...(retryBody.plans_config?._meta || {}),
+            ...extraMeta,
+          },
+        };
+      }
+
+      const retryRes = await supabaseAdmin
+        .from('courses')
+        .update(retryBody)
+        .eq('id', idOrSlug)
+        .select()
+        .single();
+
+      data = retryRes.data;
+      error = retryRes.error;
+    }
 
     if (error) {
       if (error.code === 'PGRST116') {
@@ -114,12 +137,15 @@ export async function PATCH(
       throw error;
     }
 
+    invalidateCoursesServerCache();
     return successResponse(adjustCourseStatus(data));
   } catch (err) {
     console.error('PATCH /api/courses/[idOrSlug] error:', err);
     return errorResponse(err instanceof Error ? err.message : 'Internal Server Error', 500, req.nextUrl.pathname);
   }
 }
+
+export { PATCH as PUT };
 
 export async function DELETE(
   req: NextRequest,
@@ -152,6 +178,7 @@ export async function DELETE(
       throw error;
     }
 
+    invalidateCoursesServerCache();
     return successResponse(adjustCourseStatus(data));
   } catch (err) {
     console.error('DELETE /api/courses/[idOrSlug] error:', err);

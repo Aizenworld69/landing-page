@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
@@ -43,6 +43,9 @@ const EMPTY_FORM: CourseFormInput = {
   status: 'upcoming',
   category: '',
   start_date: '',
+  schedule_time: '',
+  location: '',
+  location_url: '',
   price: 0,
   price_group: 0,
   instructor_id: '',
@@ -296,6 +299,9 @@ export default function KhoaHocPage() {
       status: course.status,
       category: course.category ?? '',
       start_date: course.start_date ? course.start_date.slice(0, 10) : '',
+      schedule_time: course.schedule_time ?? '',
+      location: course.location ?? '',
+      location_url: course.location_url ?? '',
       price: course.price,
       price_group: course.price_group,
       instructor_id: course.instructor_id,
@@ -367,6 +373,9 @@ export default function KhoaHocPage() {
         price: Number(form.price) || 0,
         price_group: Number(form.price_group) || 0,
         start_date: form.start_date || undefined,
+        schedule_time: form.schedule_time || undefined,
+        location: form.location || undefined,
+        location_url: form.location_url || undefined,
         thumbnail_url: form.thumbnail_url || undefined,
         skills: (form.skills ?? []).map((s) => ({
           title: s.title ? s.title.trim() : '',
@@ -861,6 +870,49 @@ export default function KhoaHocPage() {
                     </div>
                   </div>
 
+                  {/* Schedule Time & Location */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                        <span>⏰ Giờ bắt đầu / Khung giờ học</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={form.schedule_time ?? ''}
+                        onChange={(e) => setForm((f) => ({ ...f, schedule_time: e.target.value }))}
+                        placeholder="VD: 8h30 - 17h00"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                        <span>📍 Tên Địa điểm học</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={form.location ?? ''}
+                        onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                        placeholder="VD: Trung tâm TPHCM"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Google Maps URL */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                      <span>🗺️ Link Google Maps địa chỉ (Nhấp vào sẽ mở GG Maps)</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={form.location_url ?? ''}
+                      onChange={(e) => setForm((f) => ({ ...f, location_url: e.target.value }))}
+                      placeholder="VD: https://maps.google.com/?q=Ho+Chi+Minh"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all font-mono text-xs"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">Khi học viên bấm vào tên địa điểm ở trang chi tiết khóa học, hệ thống sẽ mở đường dẫn Google Maps này.</p>
+                  </div>
+
                   {/* Price & Price group */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -1220,7 +1272,7 @@ export default function KhoaHocPage() {
                       <div className="flex flex-col border-b border-slate-100 pb-2">
                         <span className="text-xs font-bold text-slate-700 font-black">1. Gói Early Bird (Ưu đãi sớm)</span>
                         <span className="text-[11px] font-bold text-sky-500 mt-0.5">
-                          Giá hiện hành: {formatVnd(form.plans_config?.early_bird?.price ?? Math.round(form.price * 0.73))}
+                          Giá hiện hành: {formatVnd(form.plans_config?.early_bird?.price ?? form.price)}
                         </span>
                       </div>
                       
@@ -1250,7 +1302,7 @@ export default function KhoaHocPage() {
                           <input
                             type="number"
                             value={form.plans_config?.early_bird?.price ?? ''}
-                            placeholder={`Mặc định: ${Math.round(form.price * 0.73)}`}
+                            placeholder={`Mặc định: ${form.price}`}
                             onChange={(e) => updatePlanConfig('early_bird', 'price', e.target.value ? Number(e.target.value) : undefined)}
                             className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
                           />
@@ -1314,8 +1366,8 @@ export default function KhoaHocPage() {
                                   : `${activePromos.early_bird.discount_value.toLocaleString('vi-VN')}đ`}
                                 {' → '}
                                 {activePromos.early_bird.discount_type === 'percent'
-                                  ? formatVnd(Math.round((form.plans_config?.early_bird?.price ?? Math.round(form.price * 0.73)) * (1 - activePromos.early_bird.discount_value / 100)))
-                                  : formatVnd(Math.max(0, (form.plans_config?.early_bird?.price ?? Math.round(form.price * 0.73)) - activePromos.early_bird.discount_value))
+                                  ? formatVnd(Math.round((form.plans_config?.early_bird?.price ?? form.price) * (1 - activePromos.early_bird.discount_value / 100)))
+                                  : formatVnd(Math.max(0, (form.plans_config?.early_bird?.price ?? form.price) - activePromos.early_bird.discount_value))
                                 }
                               </span>
                             </div>

@@ -1,17 +1,7 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin, verifyAdmin, successResponse, errorResponse } from '@/lib/portal/supabase-server';
-
-function adjustCourseStatus(course: any) {
-  if (course.status === 'completed' || !course.start_date) return course;
-
-  const today = new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const startDateStr = course.start_date.slice(0, 10);
-
-  if (startDateStr < today) {
-    return { ...course, status: 'completed' };
-  }
-  return course;
-}
+import { adjustCourseStatus, sortCoursesSmart } from '@/lib/portal/utils/course';
+import { invalidateCoursesServerCache } from '@/lib/portal/server-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,9 +16,7 @@ export async function GET(req: NextRequest) {
 
     let builder = supabaseAdmin
       .from('courses')
-      .select('*', { count: 'exact' })
-      .order('start_date', { ascending: true })
-      .range(offset, offset + limit - 1);
+      .select('*');
 
     if (search) {
       builder = builder.ilike('title', `%${search}%`);
@@ -50,19 +38,21 @@ export async function GET(req: NextRequest) {
       builder = builder.like('start_date', `${year}%`);
     }
 
-    const { data, error, count } = await builder;
+    const { data, error } = await builder;
 
     if (error) throw error;
 
     const mappedData = (data || []).map((c) => adjustCourseStatus(c));
+    const sorted = sortCoursesSmart(mappedData);
+    const paginatedItems = sorted.slice(offset, offset + limit);
 
     return successResponse({
-      items: mappedData,
+      items: paginatedItems,
       pagination: {
-        total: count || 0,
+        total: sorted.length,
         page,
         limit,
-        totalPages: Math.ceil((count || 0) / limit),
+        totalPages: Math.ceil(sorted.length / limit),
       },
     });
   } catch (err) {
@@ -80,14 +70,48 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    const { data, error } = await supabaseAdmin
+    let { data, error } = await supabaseAdmin
       .from('courses')
       .insert([body])
       .select()
       .single();
 
+    if (error && error.code === 'PGRST204') {
+      console.warn('[POST /api/courses] Schema column missing (PGRST204), falling back to plans_config._meta:', error.message);
+
+      const extraMeta: Record<string, any> = {};
+      const retryBody: Record<string, any> = { ...body };
+
+      ['schedule_time', 'location', 'location_url'].forEach((field) => {
+        if (field in retryBody) {
+          extraMeta[field] = retryBody[field];
+          delete retryBody[field];
+        }
+      });
+
+      if (Object.keys(extraMeta).length > 0) {
+        retryBody.plans_config = {
+          ...(retryBody.plans_config || {}),
+          _meta: {
+            ...(retryBody.plans_config?._meta || {}),
+            ...extraMeta,
+          },
+        };
+      }
+
+      const retryRes = await supabaseAdmin
+        .from('courses')
+        .insert([retryBody])
+        .select()
+        .single();
+
+      data = retryRes.data;
+      error = retryRes.error;
+    }
+
     if (error) throw error;
 
+    invalidateCoursesServerCache();
     return successResponse(adjustCourseStatus(data), 201);
   } catch (err) {
     console.error('POST /api/courses error:', err);

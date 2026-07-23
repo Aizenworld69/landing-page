@@ -35,24 +35,31 @@ const SOCIAL_LINKS = [
 export function BlogSidebar() {
   return (
     <aside className="space-y-6">
-      <div>
-        <h3 className="text-sm font-bold text-gray-900 mb-3">Danh mục bài viết</h3>
-        <ul className="space-y-2">
+      <div className="bg-slate-900/60 border border-slate-700/60 rounded-3xl p-5 backdrop-blur-xl shadow-xl shadow-sky-950/20">
+        <h3 className="text-sm font-extrabold text-white uppercase tracking-wider mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-sky-400"></span>
+          Danh mục bài viết
+        </h3>
+        <ul className="space-y-1.5">
           {CATEGORY_LINKS.map((link) => (
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="text-sm text-gray-500 hover:text-sky-500 transition-colors"
+                className="text-sm text-slate-300 hover:text-sky-300 hover:bg-sky-500/10 hover:border-sky-500/30 border border-transparent px-3 py-2 rounded-xl transition-all flex items-center justify-between group"
               >
-                {link.label}
+                <span>{link.label}</span>
+                <span className="text-slate-500 group-hover:text-sky-400 group-hover:translate-x-1 transition-all">→</span>
               </Link>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="rounded-2xl bg-gradient-to-br from-sky-50 to-blue-50 border border-sky-100 p-5">
-        <h3 className="text-sm font-bold text-gray-900 mb-3">Kết nối với AIZEN</h3>
+      <div className="rounded-3xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-xl p-5 shadow-xl shadow-sky-950/20">
+        <h3 className="text-sm font-extrabold text-white uppercase tracking-wider mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+          Kết nối với AIZEN
+        </h3>
         <div className="flex items-center gap-3">
           {SOCIAL_LINKS.map((social) => (
             <a
@@ -61,7 +68,7 @@ export function BlogSidebar() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={social.label}
-              className="group w-10 h-10 flex items-center justify-center rounded-full bg-white text-sky-500 shadow-sm ring-1 ring-sky-200 hover:bg-sky-500 hover:text-white hover:ring-sky-500 hover:shadow-md hover:shadow-sky-500/30 hover:-translate-y-0.5 transition-all duration-200"
+              className="group w-10 h-10 flex items-center justify-center rounded-xl bg-slate-800 text-sky-400 border border-slate-700 hover:bg-sky-500 hover:text-white hover:border-sky-400 hover:shadow-lg hover:shadow-sky-500/30 hover:-translate-y-1 transition-all duration-200"
             >
               <svg className="w-4.5 h-4.5 transition-transform duration-200 group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
                 {social.icon}

@@ -1,3 +1,4 @@
+import { getAdminToken } from '../admin/auth';
 import { apiClient } from './api-client';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -51,10 +52,7 @@ interface ApiResponse<T> {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function adminAuthHeader(): { Authorization: string } {
-  const token =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('admin_access_token')
-      : null;
+  const token = getAdminToken();
   return { Authorization: `Bearer ${token ?? ''}` };
 }
 
@@ -64,6 +62,7 @@ export async function adminGetPromoCodes(params: {
   page?: number;
   limit?: number;
   course_id?: string;
+  search?: string;
 }): Promise<PaginatedPromoCodes> {
   const { data } = await apiClient.get<ApiResponse<PaginatedPromoCodes>>(
     '/promo-codes/admin/list',

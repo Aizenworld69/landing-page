@@ -93,6 +93,8 @@ export interface Registration {
   referral: string;
   plan: string;
   group_id?: string | null;
+  promo_code?: string | null;
+  discount_amount?: number | null;
   created_at: string;
   course_id: string;
   courses?: { title: string; price?: number; price_group?: number } | null;
@@ -133,20 +135,26 @@ export async function getAdminStats(): Promise<AdminStats> {
 // ── Courses ───────────────────────────────────────────
 export type CourseStatus = 'upcoming' | 'completed';
 
+export type PlanConfigItem = { price?: number; label?: string; sublabel?: string; [key: string]: unknown };
+export type PlansConfigMap = Record<string, PlanConfigItem>;
+
 export interface Course {
   id: string;
   title: string;
   slug: string;
   description: string;
-  thumbnail_url: string | null;
+  thumbnail_url?: string | null;
   status: CourseStatus;
   category: string;
-  start_date: string | null;
+  start_date?: string | null;
+  schedule_time?: string | null;
+  location?: string | null;
+  location_url?: string | null;
   price: number;
   price_group: number;
   instructor_id: string;
+  skills?: { title: string; description: string; badge?: string }[] | null;
   curriculum_headline?: string | null;
-  skills?: { title: string; description: string; badge?: string }[];
   qr_early_bird?: string | null;
   qr_individual?: string | null;
   qr_group_2?: string | null;
@@ -156,7 +164,7 @@ export interface Course {
   qr_group_2_promo?: string | null;
   qr_group_4_promo?: string | null;
   early_bird_deadline?: string | null;
-  plans_config?: any;
+  plans_config?: PlansConfigMap | null;
   created_at: string;
   instructors?: { id: string; name: string } | null;
 }
@@ -182,6 +190,9 @@ export interface CourseFormInput {
   status: CourseStatus;
   category: string;
   start_date?: string;
+  schedule_time?: string;
+  location?: string;
+  location_url?: string;
   price: number;
   price_group: number;
   instructor_id: string;
@@ -196,7 +207,7 @@ export interface CourseFormInput {
   qr_group_2_promo?: string;
   qr_group_4_promo?: string;
   early_bird_deadline?: string;
-  plans_config?: any;
+  plans_config?: PlansConfigMap;
 }
 
 export async function getCourses(params: {

@@ -1,3 +1,4 @@
+import { getAdminToken } from '../admin/auth';
 import { apiClient } from './api-client';
 import type { Blog } from '@aizen/types';
 
@@ -34,10 +35,7 @@ export interface CreateBlogPayload {
 export type UpdateBlogPayload = Partial<CreateBlogPayload>;
 
 function adminAuthHeader(): { Authorization: string } {
-  const token =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('admin_access_token')
-      : null;
+  const token = getAdminToken();
   return { Authorization: `Bearer ${token ?? ''}` };
 }
 

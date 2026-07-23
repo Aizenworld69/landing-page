@@ -2,9 +2,13 @@
 
 import db from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { supabaseAdmin } from '@/lib/portal/supabase-server';
+import { z } from 'zod';
 
 // ─────────────────────────────────────────────
 // Helper: tạo mã nội dung chuyển khoản từ họ tên + gói
@@ -40,6 +44,10 @@ export async function checkAuth(): Promise<boolean> {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('admin_session')?.value;
+    const portalToken = cookieStore.get('admin_token')?.value || cookieStore.get('sb-access-token')?.value;
+
+    // Chấp nhận nếu có phiên Portal Admin (admin_token) hoặc phiên Admin thông thường (admin_session)
+    if (portalToken) return true;
     if (!token) return false;
 
     const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -893,3 +901,228 @@ export async function deleteVoucher(code: string) {
     return { success: false, error: 'Đã có lỗi xảy ra khi xóa.' };
   }
 }
+
+// ─────────────────────────────────────────────
+// Actions: Cấu hình Popup Quảng cáo (Admin & Client)
+// ─────────────────────────────────────────────
+
+export interface PopupConfig {
+  id: number;
+  title: string;
+  title_color?: string;
+  description: string;
+  image_url: string;
+  bg_image_url?: string;
+  cta_text: string;
+  cta_link: string;
+  countdown_end: string;
+  delay_seconds: number;
+  is_active: number;
+  updated_at?: string;
+}
+
+const CONFIG_FILE = path.join(process.cwd(), 'data', 'popup-config.json');
+
+function saveJsonFallback(payload: any) {
+  try {
+    const dataDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Lỗi ghi JSON fallback:', err);
+  }
+}
+
+function readJsonFallback(): PopupConfig | null {
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const raw = fs.readFileSync(CONFIG_FILE, 'utf-8');
+      return JSON.parse(raw) as PopupConfig;
+    }
+  } catch (err) {
+    console.error('Lỗi đọc JSON fallback:', err);
+  }
+  return null;
+}
+
+export async function getPopupConfigAction(): Promise<PopupConfig | null> {
+  // 1. Thử đọc từ Supabase Database
+  try {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { data, error } = await supabaseAdmin
+        .from('popups')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+
+      if (!error && data && data.title) {
+        return data as PopupConfig;
+      }
+    }
+  } catch (sbErr) {
+    console.warn('Lỗi đọc Supabase popup:', sbErr);
+  }
+
+  // 2. Dự phòng mượt mà từ file lưu trữ nếu chưa tạo bảng trên Supabase Cloud
+  const localConfig = readJsonFallback();
+  if (localConfig && localConfig.title) {
+    return localConfig;
+  }
+
+  // 3. Mặc định khởi tạo nếu hoàn toàn trống
+  return {
+    id: 1,
+    title: 'ƯU ĐÃI ĐẶC BIỆT KHÓA HỌC',
+    title_color: '#ffffff',
+    description: 'Đăng ký ngay hôm nay để nhận ngay voucher ưu đãi 20% học phí!',
+    image_url: '',
+    cta_text: 'ĐĂNG KÝ NGAY',
+    cta_link: '#register',
+    countdown_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    delay_seconds: 0,
+    is_active: 1,
+    bg_image_url: '',
+  };
+}
+
+export async function updatePopupConfigAction(data: {
+  title: string;
+  title_color?: string;
+  description: string;
+  image_url: string;
+  bg_image_url?: string;
+  cta_text: string;
+  cta_link: string;
+  countdown_end: string;
+  delay_seconds: number;
+  is_active: number;
+}) {
+  // Zod validation — chặn dữ liệu sai từ form Admin trước khi ghi vào DB
+  const schema = z.object({
+    title: z.string().min(1, 'Tiêu đề không được để trống').max(200),
+    title_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().default('#ffffff'),
+    description: z.string().max(2000),
+    image_url: z.string().max(1000),
+    bg_image_url: z.string().max(1000).optional().default(''),
+    cta_text: z.string().min(1).max(100),
+    cta_link: z.string().max(500),
+    countdown_end: z.string().max(100),
+    delay_seconds: z.number().int().min(0).max(60),
+    is_active: z.union([z.literal(0), z.literal(1)]),
+  });
+
+  const parsed = schema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues.map((e: { message: string }) => e.message).join(', ') };
+  }
+  try {
+    const authenticated = await checkAuth();
+    if (!authenticated) {
+      return { success: false, error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.' };
+    }
+
+    const payload: PopupConfig = {
+      id: 1,
+      title: data.title || '',
+      title_color: data.title_color || '#ffffff',
+      description: data.description || '',
+      image_url: data.image_url || '',
+      bg_image_url: data.bg_image_url || '',
+      cta_text: data.cta_text || 'ĐĂNG KÝ NGAY',
+      cta_link: data.cta_link || '#register',
+      countdown_end: data.countdown_end || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      delay_seconds: Number(data.delay_seconds) >= 0 ? Number(data.delay_seconds) : 0,
+      is_active: data.is_active ? 1 : 0,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Luôn lưu trữ để đảm bảo không bao giờ mất cài đặt
+    saveJsonFallback(payload);
+
+    // Thử đồng bộ lên Supabase Cloud Database
+    let sbSuccess = false;
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { error } = await supabaseAdmin.from('popups').upsert(payload);
+      if (!error) {
+        sbSuccess = true;
+      } else {
+        console.warn('Cảnh báo Supabase upsert (Cần chạy SQL script tạo bảng popups):', error.message);
+      }
+    }
+
+    revalidatePath('/');
+    revalidatePath('/portal');
+    revalidatePath('/admin/popup');
+    revalidatePath('/portal/admin/popup');
+
+    return {
+      success: true,
+      message: sbSuccess
+        ? 'Cập nhật cấu hình Popup thành công trên Supabase Cloud!'
+        : 'Cập nhật cấu hình Popup thành công!',
+    };
+  } catch (error: any) {
+    console.error('Lỗi khi lưu popup:', error);
+    return { success: false, error: error?.message || 'Có lỗi xảy ra khi lưu trên Supabase.' };
+  }
+}
+
+export async function uploadPopupImageAction(formData: FormData) {
+  try {
+    const file = formData.get('file') as File | null;
+    if (!file) {
+      return { success: false, error: 'Không tìm thấy file ảnh' };
+    }
+
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return { success: false, error: 'Chỉ chấp nhận file ảnh JPG, PNG, WEBP hoặc GIF' };
+    }
+
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      return { success: false, error: 'Kích thước file ảnh không được vượt quá 5MB' };
+    }
+
+    const cleanName = file.name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = `popups/popup_${Date.now()}_${cleanName}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // 1. Tải lên Supabase Storage bucket ('blogs')
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('blogs')
+        .upload(fileName, buffer, {
+          contentType: file.type,
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabaseAdmin.storage
+          .from('blogs')
+          .getPublicUrl(fileName);
+
+        return { success: true, url: publicUrl };
+      }
+    }
+
+    // 2. Dự phòng nếu Supabase Storage chưa sẵn sàng
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'popups');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    const filePath = path.join(uploadsDir, fileName.replace('popups/', ''));
+    fs.writeFileSync(filePath, buffer);
+
+    return { success: true, url: `/uploads/popups/${fileName.replace('popups/', '')}` };
+  } catch (error: any) {
+    console.error('Lỗi khi upload ảnh:', error);
+    return { success: false, error: error?.message || 'Có lỗi xảy ra khi tải ảnh lên server.' };
+  }
+}
+
+

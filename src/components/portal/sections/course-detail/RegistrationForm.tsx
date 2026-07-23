@@ -189,9 +189,10 @@ interface PromoCodeInputProps {
   plan: string;
   basePrice: number;
   onApplied: (result: PromoValidateResult | null) => void;
+  onCodeChange?: (code: string) => void;
 }
 
-function PromoCodeInput({ courseId, plan, basePrice, onApplied }: PromoCodeInputProps) {
+function PromoCodeInput({ courseId, plan, basePrice, onApplied, onCodeChange }: PromoCodeInputProps) {
   const [code, setCode] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [applied, setApplied] = useState<PromoValidateResult | null>(null);
@@ -229,6 +230,7 @@ function PromoCodeInput({ courseId, plan, basePrice, onApplied }: PromoCodeInput
     setApplied(null);
     setError(null);
     onApplied(null);
+    onCodeChange?.('');
   }
 
   return (
@@ -271,10 +273,15 @@ function PromoCodeInput({ courseId, plan, basePrice, onApplied }: PromoCodeInput
             type="text"
             value={code}
             placeholder="Nhập mã VD: AIZEN50"
-            onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(null); }}
+            onChange={(e) => {
+              const val = e.target.value.toUpperCase();
+              setCode(val);
+              setError(null);
+              onCodeChange?.(val);
+            }}
             onKeyDown={(e) => e.key === 'Enter' && handleApply()}
-            style={{ color: '#ffffff', caretColor: '#ffffff', WebkitTextFillColor: '#ffffff' }}
-            className={`flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border bg-slate-700/60 text-white text-sm font-mono tracking-widest placeholder:text-slate-500 placeholder:font-normal placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-sky-500/60 transition-colors ${
+            style={{ color: '#ffffff', caretColor: '#ffffff' }}
+            className={`flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border bg-slate-700/60 text-white text-sm font-mono tracking-widest placeholder:text-slate-400/70 placeholder:font-normal placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-sky-500/60 transition-colors ${
               error ? 'border-red-400/60' : 'border-white/15 hover:border-white/25'
             }`}
           />
@@ -381,14 +388,14 @@ export function RegistrationForm({ courseId, price, priceGroup }: RegistrationFo
       priceLabel: formatCurrency(priceGroup * 2),
       originalPriceLabel: formatCurrency(price * 2),
       memberCount: 2, basePrice: priceGroup * 2,
-      badge: { text: 'HOT NHẤT', color: 'bg-sky-500' },
+      badge: { text: 'HOT NHẤT', color: 'bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 shadow-md shadow-red-500/30' },
     },
     {
       key: 'group_4', label: 'Nhóm 4 người', sublabel: `${formatCurrency(Math.round(group4Price / 4))}/người`,
       priceLabel: formatCurrency(group4Price),
       originalPriceLabel: formatCurrency(price * 4),
       memberCount: 4, basePrice: group4Price,
-      badge: { text: 'TIẾT KIỆM 24%', color: 'bg-emerald-500' },
+      badge: { text: 'TIẾT KIỆM NHẤT', color: 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-md shadow-emerald-500/30' },
     },
   ];
 
@@ -402,6 +409,7 @@ export function RegistrationForm({ courseId, price, priceGroup }: RegistrationFo
   const [success, setSuccess] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [appliedPromo, setAppliedPromo] = useState<PromoValidateResult | null>(null);
+  const [promoCodeStr, setPromoCodeStr] = useState('');
 
   const totalSteps = selectedPlan.memberCount;
   const isMulti = totalSteps > 1;
@@ -457,9 +465,7 @@ export function RegistrationForm({ courseId, price, priceGroup }: RegistrationFo
     setApiError(null);
 
     // Lấy promoCode nếu đã apply thành công
-    const promoCode = appliedPromo?.valid
-      ? (document.getElementById('promo-code-input') as HTMLInputElement | null)?.value?.trim()?.toUpperCase() || undefined
-      : undefined;
+    const promoCode = appliedPromo?.valid ? promoCodeStr : undefined;
 
     try {
       let message: string;
@@ -468,7 +474,7 @@ export function RegistrationForm({ courseId, price, priceGroup }: RegistrationFo
         const result = await createRegistration({
           courseId, fullName: m.fullName, phone: m.phone, email: m.email,
           company: m.company || undefined, position: m.position || undefined,
-          referral, plan: selectedPlan.key === 'early_bird' ? 'individual' : 'individual',
+          referral, plan: selectedPlan.key,
           promoCode,
         });
         message = result.message;
@@ -579,6 +585,7 @@ export function RegistrationForm({ courseId, price, priceGroup }: RegistrationFo
                 plan={selectedPlan.key}
                 basePrice={selectedPlan.basePrice}
                 onApplied={handlePromoApplied}
+                onCodeChange={setPromoCodeStr}
               />
             </div>
           </>

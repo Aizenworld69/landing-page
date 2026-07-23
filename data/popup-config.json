@@ -1,0 +1,14 @@
+{
+  "id": 1,
+  "title": "ƯU ĐÃI ĐẶC BIỆT KHÓA HỌC",
+  "title_color": "#ef4444",
+  "description": "<p><span style=\"color: rgb(251, 191, 36);\">                      Đăng ký ngay hôm nay để </span></p><p><span style=\"color: rgb(251, 191, 36);\">              hận ngay voucher ưu đãi 20% học phí!</span></p>",
+  "image_url": "https://qdhlzyijmyllqmmdzmgi.supabase.co/storage/v1/object/public/blogs/popups/popup_1784775263054_0ed5062e-4039-406a-a1a4-32a37344726b.jpg",
+  "bg_image_url": "",
+  "cta_text": "ĐĂNG KÝ NGAY",
+  "cta_link": "/portal/courses/kien-truc-tich-hop-ai",
+  "countdown_end": "2026-08-30T02:53:00.000Z",
+  "delay_seconds": 3,
+  "is_active": 0,
+  "updated_at": "2026-07-23T03:29:38.270Z"
+}

@@ -10,6 +10,7 @@ import {
   type CreatePromoCodePayload,
   type PaginatedPromoCodes,
 } from "@/lib/portal/api/admin-promo-codes.api";
+import { getAdminToken } from "@/lib/portal/admin/auth";
 import { apiClient } from "@/lib/portal/api/api-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -64,10 +65,7 @@ function formatDateTimeLocal(isoString: string | null): string {
 }
 
 function adminAuthHeader() {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("admin_access_token")
-      : null;
+  const token = getAdminToken();
   return { Authorization: `Bearer ${token ?? ""}` };
 }
 
@@ -79,11 +77,16 @@ interface ModalFormProps {
   isEdit: boolean;
   saving: boolean;
   onClose: () => void;
-  onSubmit: (form: CreatePromoCodePayload) => Promise<void>;
+  onSubmit: (forms: CreatePromoCodePayload[]) => Promise<void>;
 }
 
 function ModalForm({ initial, courses, isEdit, saving, onClose, onSubmit }: ModalFormProps) {
   const [form, setForm] = useState<CreatePromoCodePayload>(initial);
+  const [creationMode, setCreationMode] = useState<"single" | "batch">("single");
+  const [batchInputMode, setBatchInputMode] = useState<"list" | "prefix">("list");
+  const [batchCodesText, setBatchCodesText] = useState("");
+  const [prefix, setPrefix] = useState("AIZEN_");
+  const [count, setCount] = useState(5);
 
   function set<K extends keyof CreatePromoCodePayload>(
     key: K,
@@ -92,9 +95,38 @@ function ModalForm({ initial, courses, isEdit, saving, onClose, onSubmit }: Moda
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  // Calculated batch codes preview
+  const parsedListCodes = Array.from(
+    new Set(
+      batchCodesText
+        .split(/[\s,\n]+/)
+        .map((c) => c.trim().toUpperCase())
+        .filter(Boolean),
+    ),
+  );
+
+  const cleanPrefix = prefix.trim().toUpperCase();
+  const safeCount = Math.min(50, Math.max(1, count));
+  const generatedPrefixCodes = Array.from(
+    { length: safeCount },
+    (_, i) => `${cleanPrefix}${i + 1}`,
+  );
+
+  const finalBatchCodes = batchInputMode === "list" ? parsedListCodes : generatedPrefixCodes;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await onSubmit(form);
+
+    if (!isEdit && creationMode === "batch") {
+      if (finalBatchCodes.length === 0) {
+        alert("Vui lòng nhập hoặc cấu hình ít nhất 1 mã hợp lệ!");
+        return;
+      }
+      const payloads = finalBatchCodes.map((c) => ({ ...form, code: c }));
+      await onSubmit(payloads);
+    } else {
+      await onSubmit([form]);
+    }
   }
 
   return (
@@ -107,7 +139,7 @@ function ModalForm({ initial, courses, isEdit, saving, onClose, onSubmit }: Moda
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 transition"
+            className="text-slate-400 hover:text-slate-600 transition cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -117,8 +149,36 @@ function ModalForm({ initial, courses, isEdit, saving, onClose, onSubmit }: Moda
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto">
-          {/* Code */}
+          {/* Mode Switcher for New Creation */}
           {!isEdit && (
+            <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 mb-2">
+              <button
+                type="button"
+                onClick={() => setCreationMode("single")}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  creationMode === "single"
+                    ? "bg-white text-indigo-700 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                📌 Tạo 1 Mã đơn lẻ
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreationMode("batch")}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  creationMode === "batch"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                ⚡ Tạo Hàng loạt (Nhiều mã)
+              </button>
+            </div>
+          )}
+
+          {/* Code Input (Single Mode) */}
+          {!isEdit && creationMode === "single" && (
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">
                 Mã khuyến mãi <span className="text-red-500">*</span>
@@ -134,16 +194,97 @@ function ModalForm({ initial, courses, isEdit, saving, onClose, onSubmit }: Moda
             </div>
           )}
 
+          {/* Batch Code Inputs (Batch Mode) */}
+          {!isEdit && creationMode === "batch" && (
+            <div className="p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-indigo-900">
+                  ⚡ Phương thức tạo hàng loạt
+                </label>
+                <div className="flex gap-1.5 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setBatchInputMode("list")}
+                    className={`px-2.5 py-1 rounded-md font-bold transition cursor-pointer ${
+                      batchInputMode === "list"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white text-slate-600 border border-slate-200"
+                    }`}
+                  >
+                    Dán danh sách
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBatchInputMode("prefix")}
+                    className={`px-2.5 py-1 rounded-md font-bold transition cursor-pointer ${
+                      batchInputMode === "prefix"
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white text-slate-600 border border-slate-200"
+                    }`}
+                  >
+                    Sinh theo tiền tố
+                  </button>
+                </div>
+              </div>
+
+              {batchInputMode === "list" ? (
+                <div>
+                  <textarea
+                    rows={3}
+                    value={batchCodesText}
+                    onChange={(e) => setBatchCodesText(e.target.value)}
+                    placeholder="Dán các mã vào đây (cách nhau bởi dấu phẩy, khoảng trắng hoặc xuống dòng)&#10;VD: AIZEN10, AIZEN20, AIZEN30"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+                  />
+                  <p className="text-[11px] font-bold text-indigo-700 mt-1">
+                    ✓ Phát hiện {parsedListCodes.length} mã riêng biệt hợp lệ
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Tiền tố mã</label>
+                      <input
+                        type="text"
+                        value={prefix}
+                        onChange={(e) => setPrefix(e.target.value.toUpperCase())}
+                        placeholder="VD: SUMMER2026_"
+                        className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Số lượng mã</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={count}
+                        onChange={(e) => setCount(Number(e.target.value))}
+                        className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="p-2 bg-white rounded-lg border border-slate-100 text-[10px] text-slate-500 font-mono flex flex-wrap gap-1">
+                    <span className="font-bold text-indigo-600 mr-1">Mẫu sinh:</span>
+                    {generatedPrefixCodes.slice(0, 4).join(", ")}
+                    {generatedPrefixCodes.length > 4 && ` ... (${generatedPrefixCodes.length} mã)`}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Course */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
-              Khóa học <span className="text-red-500">*</span>
+              Khóa học áp dụng <span className="text-red-500">*</span>
             </label>
             <select
               required
               value={form.course_id}
               onChange={(e) => set("course_id", e.target.value)}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white font-medium"
             >
               <option value="">-- Chọn khóa học --</option>
               {courses.map((c) => (
@@ -156,16 +297,16 @@ function ModalForm({ initial, courses, isEdit, saving, onClose, onSubmit }: Moda
 
           {/* Plan */}
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Gói áp dụng</label>
-            <div className="flex gap-2">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Gói áp dụng <span className="text-red-500">*</span></label>
+            <div className="flex gap-1.5 flex-wrap">
               {(["all", "early_bird", "individual", "group_2", "group_4"] as const).map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => set("plan", p)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-medium border transition ${
+                  className={`flex-1 min-w-[70px] py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
                     form.plan === p
-                      ? "bg-indigo-600 text-white border-indigo-600"
+                      ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
                       : "bg-white text-slate-600 border-slate-200 hover:border-indigo-400"
                   }`}
                 >
@@ -252,16 +393,22 @@ function ModalForm({ initial, courses, isEdit, saving, onClose, onSubmit }: Moda
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50 transition"
+              className="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition cursor-pointer"
             >
               Hủy
             </button>
             <button
               type="submit"
-              disabled={saving}
-              className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition"
+              disabled={saving || (!isEdit && creationMode === "batch" && finalBatchCodes.length === 0)}
+              className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 transition cursor-pointer shadow-sm"
             >
-              {saving ? "Đang lưu..." : isEdit ? "Lưu thay đổi" : "Tạo mã"}
+              {saving
+                ? "Đang xử lý..."
+                : isEdit
+                ? "Lưu thay đổi"
+                : creationMode === "batch"
+                ? `Tạo ${finalBatchCodes.length} mã`
+                : "Tạo mã"}
             </button>
           </div>
         </form>
@@ -278,6 +425,10 @@ export default function AdminPromoCodesPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
+  // Filter state
+  const [filterCourseId, setFilterCourseId] = useState<string>("");
+  const [filterSearch, setFilterSearch] = useState<string>("");
+
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<PromoCode | null>(null);
@@ -288,14 +439,19 @@ export default function AdminPromoCodesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await adminGetPromoCodes({ page, limit: 20 });
+      const data = await adminGetPromoCodes({
+        page,
+        limit: 20,
+        course_id: filterCourseId || undefined,
+        search: filterSearch || undefined,
+      });
       setResult(data);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, filterCourseId, filterSearch]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -327,50 +483,70 @@ export default function AdminPromoCodesPage() {
     setShowModal(true);
   }
 
-  async function handleSubmit(form: CreatePromoCodePayload) {
+  async function handleSubmit(forms: CreatePromoCodePayload[]) {
     setSaving(true);
     setError(null);
     try {
-      if (!form.course_id || form.course_id.trim() === "") {
+      if (forms.length === 0) return;
+
+      const firstForm = forms[0]!;
+      if (!firstForm.course_id || firstForm.course_id.trim() === "") {
         throw new Error("Vui lòng chọn khóa học");
       }
 
-      // Chấp nhận mọi UUID format (8-4-4-4-12 hex), không giới hạn version
+      // Chấp nhận mọi UUID format (8-4-4-4-12 hex)
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(form.course_id)) {
+      if (!uuidRegex.test(firstForm.course_id)) {
         throw new Error("Khóa học được chọn không hợp lệ");
       }
 
-      const expiresAtDate = form.expires_at ? new Date(form.expires_at) : null;
-      if (expiresAtDate) {
-        if (
-          isNaN(expiresAtDate.getTime()) ||
-          expiresAtDate.getFullYear() > 9999 ||
-          expiresAtDate.getFullYear() < 1000
-        ) {
-          throw new Error("Ngày hết hạn không hợp lệ (năm phải từ 1000 đến 9999)");
+      let successCount = 0;
+      let lastError: string | null = null;
+
+      for (const form of forms) {
+        try {
+          const expiresAtDate = form.expires_at ? new Date(form.expires_at) : null;
+          if (expiresAtDate) {
+            if (
+              isNaN(expiresAtDate.getTime()) ||
+              expiresAtDate.getFullYear() > 9999 ||
+              expiresAtDate.getFullYear() < 1000
+            ) {
+              throw new Error("Ngày hết hạn không hợp lệ (năm phải từ 1000 đến 9999)");
+            }
+          }
+
+          const cleanPayload: CreatePromoCodePayload = {
+            ...form,
+            expires_at: expiresAtDate ? expiresAtDate.toISOString() : undefined,
+            note: form.note || undefined,
+          };
+
+          const finalPayload = Object.fromEntries(
+            Object.entries(cleanPayload).filter(([_, v]) => v !== undefined)
+          ) as CreatePromoCodePayload;
+
+          if (editTarget) {
+            const { code: _code, ...updatePayload } = finalPayload;
+            await adminUpdatePromoCode(editTarget.id, updatePayload);
+          } else {
+            await adminCreatePromoCode(finalPayload);
+          }
+          successCount++;
+        } catch (err) {
+          console.error(`[PromoCode] Lỗi tạo mã ${form.code}:`, err);
+          lastError = err instanceof Error ? err.message : "Có lỗi tạo mã";
         }
       }
 
-      const cleanPayload: CreatePromoCodePayload = {
-        ...form,
-        expires_at: expiresAtDate ? expiresAtDate.toISOString() : undefined,
-        note: form.note || undefined,
-      };
-
-      // Remove undefined fields to avoid sending them
-      const finalPayload = Object.fromEntries(
-        Object.entries(cleanPayload).filter(([_, v]) => v !== undefined)
-      ) as CreatePromoCodePayload;
-
-      console.log("[PromoCode] Payload gửi lên backend:", JSON.stringify(finalPayload, null, 2));
-
-      if (editTarget) {
-        const { code: _code, ...updatePayload } = finalPayload;
-        await adminUpdatePromoCode(editTarget.id, updatePayload);
-      } else {
-        await adminCreatePromoCode(finalPayload);
+      if (successCount === 0 && lastError) {
+        throw new Error(lastError);
       }
+
+      if (forms.length > 1) {
+        alert(`Đã tạo thành công ${successCount}/${forms.length} mã khuyến mãi!`);
+      }
+
       setShowModal(false);
       load();
     } catch (err) {
@@ -437,10 +613,84 @@ export default function AdminPromoCodesPage() {
 
       {/* Error banner */}
       {error && (
-        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
           {error}
         </div>
       )}
+
+      {/* ── BỘ LỌC KHÓA HỌC VÀ TÌM KIẾM MÃ ──────────────────────── */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-4 flex-1 min-w-[280px]">
+          {/* Lọc theo Khóa học */}
+          <div className="flex flex-col gap-1 min-w-[220px] flex-1 max-w-sm">
+            <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <span>📚 Lọc theo Khóa học</span>
+              {filterCourseId && <span className="text-indigo-600 font-bold">(Đang lọc)</span>}
+            </label>
+            <select
+              value={filterCourseId}
+              onChange={(e) => {
+                setFilterCourseId(e.target.value);
+                setPage(1);
+              }}
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 bg-slate-50 hover:bg-slate-100/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer"
+            >
+              <option value="">-- Tất cả khóa học ({courses.length}) --</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tìm kiếm Mã */}
+          <div className="flex flex-col gap-1 min-w-[200px] flex-1 max-w-xs">
+            <label className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <span>🔍 Tìm theo Mã khuyến mãi</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={filterSearch}
+                onChange={(e) => {
+                  setFilterSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="VD: AIZEN50..."
+                className="w-full border border-slate-200 rounded-xl px-3 py-1.5 pr-8 text-xs font-mono uppercase text-slate-800 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:font-sans placeholder:normal-case font-bold"
+              />
+              {filterSearch && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterSearch("");
+                    setPage(1);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs font-extrabold cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Nút Xóa bộ lọc */}
+        {(filterCourseId || filterSearch) && (
+          <button
+            type="button"
+            onClick={() => {
+              setFilterCourseId("");
+              setFilterSearch("");
+              setPage(1);
+            }}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 self-end"
+          >
+            <span>🔄 Xóa bộ lọc</span>
+          </button>
+        )}
+      </div>
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -466,6 +716,7 @@ export default function AdminPromoCodesPage() {
                   <th className="px-4 py-3 text-left font-medium">Gói</th>
                   <th className="px-4 py-3 text-left font-medium">Giảm giá</th>
                   <th className="px-4 py-3 text-left font-medium">Lượt dùng</th>
+                  <th className="px-4 py-3 text-left font-medium">Đã sử dụng chưa</th>
                   <th className="px-4 py-3 text-left font-medium">Hết hạn</th>
                   <th className="px-4 py-3 text-left font-medium">Trạng thái</th>
                   <th className="px-4 py-3 text-left font-medium">Thao tác</th>
@@ -490,7 +741,7 @@ export default function AdminPromoCodesPage() {
 
                     {/* Plan */}
                     <td className="px-4 py-3">
-                      <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">
                         {PLAN_LABEL[promo.plan] ?? promo.plan}
                       </span>
                     </td>
@@ -517,10 +768,30 @@ export default function AdminPromoCodesPage() {
                             }}
                           />
                         </div>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-slate-500 font-medium">
                           {promo.used_count}/{promo.max_uses}
                         </span>
                       </div>
+                    </td>
+
+                    {/* Has used status */}
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {promo.used_count === 0 ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                          Chưa sử dụng
+                        </span>
+                      ) : promo.used_count >= promo.max_uses ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200/80 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                          Đã dùng hết ({promo.used_count})
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Đã dùng {promo.used_count} lượt
+                        </span>
+                      )}
                     </td>
 
                     {/* Expires */}

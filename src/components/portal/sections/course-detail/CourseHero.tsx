@@ -17,6 +17,19 @@ function formatDate(dateStr: string | null) {
   return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+function formatWeekdayDate(dateStr: string | null) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+
+  const weekdays = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+  const weekday = weekdays[d.getDay()];
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+
+  return `${weekday}, ${day}/${month}`;
+}
+
 const containerVariants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.1 } },
@@ -29,6 +42,7 @@ const fadeUp = {
 
 export function CourseHero({ course }: CourseHeroProps) {
   const date = formatDate(course.start_date);
+  const formattedWeekdayDate = formatWeekdayDate(course.start_date);
   const isCompleted = course.status === 'completed';
 
   return (
@@ -43,37 +57,22 @@ export function CourseHero({ course }: CourseHeroProps) {
         animate="show"
         className="relative z-10 flex flex-col items-center text-center"
       >
-        {/* Category + Status badge */}
-        <motion.div variants={fadeUp} className="flex items-center justify-center gap-3 mb-5 flex-wrap">
-          <span className="text-[11px] font-black tracking-[0.2em] text-[#0EA5E9] uppercase">
-            {course.category}
-          </span>
-          <span className="h-3 border-l border-slate-600" />
-          <span
-            className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-              isCompleted
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                : 'bg-[#3b82f6]/20 text-[#0EA5E9] border border-[#3b82f6]/30'
-            }`}
-          >
-            {isCompleted ? '✓ Đã hoàn thành' : '⏳ Sắp khai giảng'}
+        {/* Top Tagline (Matching Image 1) */}
+        <motion.div variants={fadeUp} className="mb-4">
+          <span className="text-xs sm:text-sm font-black tracking-[0.2em] text-[#38bdf8] uppercase">
+            KHÓA HỌC TỪ CƠ BẢN ĐẾN CHUYÊN SÂU
           </span>
         </motion.div>
 
         {/* Title */}
         <motion.h1
           variants={fadeUp}
-          className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.05] mb-5"
+          className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.08] mb-4"
         >
           {course.title.split(' ').map((word, i) => {
-            const highlighted = ['AI', 'Claude', 'Prompt', 'Data', 'Multi-Agent', 'UI'].some(k =>
-              word.includes(k)
-            );
-            return highlighted ? (
-              <span
-                key={i}
-                className="text-transparent bg-clip-text bg-gradient-to-r from-[#38bdf8] via-[#0EA5E9] to-[#3b82f6]"
-              >
+            const isOrange = ['Claude', 'AI', 'Automation'].some(k => word.includes(k));
+            return isOrange ? (
+              <span key={i} className="text-[#ea580c]">
                 {word}{' '}
               </span>
             ) : (
@@ -82,13 +81,63 @@ export function CourseHero({ course }: CourseHeroProps) {
           })}
         </motion.h1>
 
-        {/* Description */}
+        {/* Description (Italic matching Image 1) */}
         <motion.p
           variants={fadeUp}
-          className="text-base sm:text-lg text-slate-300/90 font-normal leading-[1.75] mb-8 max-w-2xl mx-auto"
+          className="text-base sm:text-lg text-slate-300 italic font-medium leading-[1.6] mb-6 max-w-xl mx-auto"
         >
           {course.description}
         </motion.p>
+
+        {/* Date + Time + Location Sub-bar (Matching Image 1 Exact Layout) */}
+        {(formattedWeekdayDate || course.location) && (
+          <motion.div
+            variants={fadeUp}
+            className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap mb-8 text-left"
+          >
+            {/* Date & Time Column */}
+            {formattedWeekdayDate && (
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-amber-500 text-2xl shrink-0">calendar_month</span>
+                <div className="flex flex-col">
+                  <span className="text-white font-black text-sm sm:text-base leading-tight">
+                    {formattedWeekdayDate}
+                  </span>
+                  <span className="text-slate-400 text-xs font-semibold leading-tight mt-0.5">
+                    {course.schedule_time || '8h30 - 17h'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Vertical Separator */}
+            {formattedWeekdayDate && course.location && (
+              <span className="text-slate-600/80 hidden sm:inline text-lg font-light">|</span>
+            )}
+
+            {/* Location */}
+            {course.location && (
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-orange-500 text-2xl shrink-0">location_on</span>
+                {course.location_url ? (
+                  <a
+                    href={course.location_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white font-black text-sm sm:text-base hover:text-sky-300 transition-colors cursor-pointer"
+                    title="Mở vị trí trên Google Maps"
+                  >
+                    {course.location}
+                  </a>
+                ) : (
+                  <span className="text-white font-black text-sm sm:text-base">
+                    {course.location}
+                  </span>
+                )}
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Meta stats */}
         <motion.div
@@ -122,9 +171,9 @@ export function CourseHero({ course }: CourseHeroProps) {
               <div className="w-8 h-8 rounded-lg bg-[#0EA5E9]/15 flex items-center justify-center shrink-0">
                 <span className="material-symbols-outlined text-[#0EA5E9] text-base leading-none">calendar_month</span>
               </div>
-              <div className="flex flex-col justify-center leading-none">
+              <div className="flex flex-col justify-center leading-none text-left">
                 <p className="text-white font-bold text-sm leading-tight m-0 p-0">{date}</p>
-                <p className="text-slate-400 text-xs leading-tight mt-1 m-0 p-0">8h30 – 17h00</p>
+                <p className="text-slate-400 text-xs leading-tight mt-1 m-0 p-0">{course.schedule_time || '8h30 – 17h00'}</p>
               </div>
             </div>
           )}

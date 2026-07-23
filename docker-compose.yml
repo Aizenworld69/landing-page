@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   landing-page:
+    build: .
     image: ghcr.io/aizenworld69/landing-page:latest
     container_name: landing-page
     restart: always

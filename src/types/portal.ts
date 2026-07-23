@@ -11,6 +11,9 @@ export interface Course {
   status: CourseStatus;
   category: string;
   start_date: string | null;
+  schedule_time?: string | null;
+  location?: string | null;
+  location_url?: string | null;
   early_bird_deadline?: string | null;
   price: number;
   price_group: number;
@@ -25,7 +28,7 @@ export interface Course {
   qr_individual_promo?: string | null;
   qr_group_2_promo?: string | null;
   qr_group_4_promo?: string | null;
-  plans_config?: any;
+  plans_config?: Record<string, { price?: number; label?: string; sublabel?: string; [key: string]: unknown }> | null;
   created_at: string;
 }
 

@@ -10,6 +10,7 @@ import { createRegistration, createGroupRegistration, validatePromoCode, type Pr
 interface CoursePlanSectionProps {
   courseId: string;
   courseTitle: string;
+  courseStatus?: string;
   price: number;
   priceGroup: number;
   qrEarlyBird?: string;
@@ -111,8 +112,8 @@ function DarkInput({ label, error, id, required, ...props }: DarkInputProps) {
         {label}{required && <span className="text-red-400 ml-0.5">*</span>}
       </label>
       <input id={id} {...props}
-        style={{ color: '#ffffff', caretColor: '#ffffff', WebkitTextFillColor: '#ffffff' }}
-        className={`w-full px-3 py-2 rounded-lg border bg-slate-700/60 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 transition-colors ${
+        style={{ color: '#ffffff', caretColor: '#ffffff' }}
+        className={`w-full px-3 py-2 rounded-lg border bg-slate-700/60 text-white text-sm placeholder:text-slate-400/70 focus:outline-none focus:ring-2 focus:ring-sky-500/60 transition-colors ${
           error ? 'border-red-400/60' : 'border-white/15 hover:border-white/25'
         }`} />
       {error && <p className="text-xs text-red-400 mt-0.5">{error}</p>}
@@ -436,7 +437,7 @@ function RegistrationModal({ plan, courseId, courseTitle, qrNormalUrl, qrPromoUr
                         <p className="text-emerald-400/80 text-xs">
                           {appliedPromo.discount_type === 'percent'
                             ? `Đã áp dụng giảm ${appliedPromo.discount_value}%`
-                            : `Đã áp dụng giảm ${formatCurrency(appliedPromo.discount_value)}`}
+                            : `Đã áp dụng giảm ${formatCurrency(appliedPromo.discount_value ?? 0)}`}
                         </p>
                       </div>
                     </div>
@@ -461,8 +462,8 @@ function RegistrationModal({ plan, courseId, courseTitle, qrNormalUrl, qrPromoUr
                         setPromoCodeInput(e.target.value.toUpperCase());
                         setPromoError(null);
                       }}
-                      style={{ color: '#ffffff', caretColor: '#ffffff', WebkitTextFillColor: '#ffffff' }}
-                      className="flex-1 px-3 py-2 rounded-lg border border-white/15 bg-slate-700/60 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60 tracking-wider font-mono"
+                      style={{ color: '#ffffff', caretColor: '#ffffff' }}
+                      className="flex-1 px-3 py-2 rounded-lg border border-white/15 bg-slate-700/60 text-white text-sm placeholder:text-slate-400/70 focus:outline-none focus:ring-2 focus:ring-sky-500/60 tracking-wider font-mono"
                     />
                     <button
                       type="button"
@@ -563,11 +564,12 @@ function formatDate(dateStr: string): string {
 interface PlanCardProps {
   plan: PlanConfig;
   disabled?: boolean;
+  disabledReason?: string;
   earlyBirdDeadline?: string | null;
   onClick: () => void;
 }
 
-function PlanCard({ plan, disabled, earlyBirdDeadline, onClick }: PlanCardProps) {
+function PlanCard({ plan, disabled, disabledReason = 'Đã hết hạn đăng ký', earlyBirdDeadline, onClick }: PlanCardProps) {
   const isEarlyBird = plan.key === 'early_bird';
   const isGroup4 = plan.key === 'group_4';
   const isGroup2 = plan.key === 'group_2';
@@ -593,27 +595,27 @@ function PlanCard({ plan, disabled, earlyBirdDeadline, onClick }: PlanCardProps)
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl overflow-hidden h-full ${
-        disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer group'
+      className={`relative flex flex-col rounded-2xl overflow-visible h-full ${
+        disabled ? 'opacity-50 grayscale select-none cursor-not-allowed pointer-events-none' : 'cursor-pointer group'
       }`}
       style={{
         background: disabled
           ? 'rgba(15,25,40,0.6)'
-          : 'rgba(15,28,48,0.8)',
+          : 'rgba(15,28,48,0.85)',
         border: `1px solid ${getCardBorder()}`,
         boxShadow: getCardGlow(),
         backdropFilter: 'blur(8px)',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
-        minHeight: 200,
+        minHeight: 340,
       }}
       onClick={disabled ? undefined : onClick}
       onMouseEnter={(e) => {
         if (disabled) return;
         const el = e.currentTarget as HTMLElement;
-        el.style.transform = 'translateY(-5px)';
-        if (isGroup4) el.style.boxShadow = '0 12px 32px rgba(16,185,129,0.2)';
-        else if (isGroup2) el.style.boxShadow = '0 12px 32px rgba(14,165,233,0.2)';
-        else el.style.boxShadow = '0 12px 32px rgba(14,165,233,0.15)';
+        el.style.transform = 'translateY(-6px)';
+        if (isGroup4) el.style.boxShadow = '0 16px 36px rgba(16,185,129,0.25)';
+        else if (isGroup2) el.style.boxShadow = '0 16px 36px rgba(244,63,94,0.25)';
+        else el.style.boxShadow = '0 16px 36px rgba(14,165,233,0.2)';
       }}
       onMouseLeave={(e) => {
         if (disabled) return;
@@ -622,27 +624,37 @@ function PlanCard({ plan, disabled, earlyBirdDeadline, onClick }: PlanCardProps)
         el.style.boxShadow = getCardGlow();
       }}
     >
-      <div className="flex flex-col flex-1 p-5 pt-4">
+      <div className="flex flex-col flex-1 p-6 pt-7">
+      {/* Top Floating Badge Pill */}
+      {plan.badge && (
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap">
+          <span
+            className={`px-3.5 py-1 text-[10px] font-black uppercase tracking-widest text-white rounded-full shadow-md border border-white/20 ${
+              isGroup2
+                ? 'bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 shadow-red-500/40'
+                : isGroup4
+                ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-emerald-500/40'
+                : ''
+            }`}
+            style={{
+              background: (!isGroup2 && !isGroup4) ? getBadgeGradient() : undefined,
+            }}
+          >
+            {plan.badge.text}
+          </span>
+        </div>
+      )}
+
         {/* Dynamic Badge Pill Tags */}
-        {(plan.badge || (isEarlyBird && earlyBirdDeadline)) && (
+        {isEarlyBird && earlyBirdDeadline && (
           <div className="flex flex-wrap items-center gap-1.5 mb-3">
-            {plan.badge && (
-              <span
-                className="px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white rounded-full shadow-sm"
-                style={{ background: getBadgeGradient() }}
-              >
-                {plan.badge.text}
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-slate-950 bg-amber-400 rounded-full border border-amber-300 shadow-sm shadow-amber-400/20">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-600 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
               </span>
-            )}
-            {isEarlyBird && earlyBirdDeadline && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-slate-950 bg-amber-400 rounded-full border border-amber-300 shadow-sm shadow-amber-400/20">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-600 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
-                </span>
-                Đến {formatDate(earlyBirdDeadline)}
-              </span>
-            )}
+              Đến {formatDate(earlyBirdDeadline)}
+            </span>
           </div>
         )}
         {/* Icon */}
@@ -684,8 +696,8 @@ function PlanCard({ plan, disabled, earlyBirdDeadline, onClick }: PlanCardProps)
           </p>
 
           {disabled ? (
-            <div className="w-full py-2.5 rounded-xl border border-white/10 text-slate-500 text-xs font-semibold text-center">
-              Đã hết hạn đăng ký
+            <div className="w-full py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-xs font-bold text-center">
+              {disabledReason}
             </div>
           ) : (
             <button
@@ -716,6 +728,7 @@ function PlanCard({ plan, disabled, earlyBirdDeadline, onClick }: PlanCardProps)
 export function CoursePlanSection({
   courseId,
   courseTitle,
+  courseStatus,
   price,
   priceGroup,
   qrEarlyBird,
@@ -729,12 +742,13 @@ export function CoursePlanSection({
   plansConfig,
   earlyBirdDeadline,
 }: CoursePlanSectionProps) {
-  const earlyBirdPrice = plansConfig?.early_bird?.price ?? Math.round(price * 0.73);
+  const earlyBirdPrice = plansConfig?.early_bird?.price ?? price;
   const earlyBirdLabel = plansConfig?.early_bird?.label || 'Early Bird';
   const earlyBirdSublabel = plansConfig?.early_bird?.sublabel || '1 người · Ưu đãi có hạn';
 
   const plansList = plansConfig || {};
   const isExpired = earlyBirdDeadline ? new Date(earlyBirdDeadline) < new Date() : false;
+  const isCompleted = courseStatus === 'completed';
 
   const individualPrice = plansConfig?.individual?.price ?? price;
   const individualLabel = plansConfig?.individual?.label || '1 người';
@@ -744,11 +758,7 @@ export function CoursePlanSection({
   const group2Label = plansConfig?.group_2?.label || 'Nhóm 2 người';
   const group2Sublabel = plansConfig?.group_2?.sublabel || `${formatCurrency(group2PricePerPerson)}/người`;
 
-  const group4Total = plansConfig?.group_4?.price ?? (
-    courseId === '9a8b7c6d-5e4f-3a2b-1c0d-9e8d7c6b5a4f' || price === 1300000
-      ? 3800000
-      : Math.round((priceGroup - 150000) * 4)
-  );
+  const group4Total = plansConfig?.group_4?.price ?? (priceGroup * 4);
   const group4Label = plansConfig?.group_4?.label || 'Nhóm 4 người';
   const group4Sublabel = plansConfig?.group_4?.sublabel || `${formatCurrency(Math.round(group4Total / 4))}/người`;
 
@@ -796,7 +806,7 @@ export function CoursePlanSection({
       totalPrice: group4Total,
       originalTotal: price * 4,
       memberCount: 4,
-      badge: { text: `TIẾT KIỆM ${Math.round(((price * 4 - group4Total) / (price * 4)) * 100)}%`, color: 'bg-emerald-500' },
+      badge: { text: 'TIẾT KIỆM NHẤT', color: 'bg-emerald-500' },
       icon: <IconUsers className="w-5 h-5 text-emerald-400" />,
       buttonLabel: 'Đăng ký nhóm',
     },
@@ -828,8 +838,19 @@ export function CoursePlanSection({
           </h2>
         </motion.div>
 
+        {isCompleted && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-8 p-4 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-amber-300 text-center text-sm font-bold backdrop-blur-md flex items-center justify-center gap-2 shadow-xl"
+          >
+            <span className="text-lg">🔒</span>
+            <span>Khóa học này đã hoàn thành. Hiện tại hệ thống đã đóng cổng nhận đăng ký mới!</span>
+          </motion.div>
+        )}
+
         {/* 4 plan cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-6">
           {PLANS.map((plan, i) => (
             <motion.div
               key={plan.key}
@@ -840,7 +861,8 @@ export function CoursePlanSection({
             >
               <PlanCard
                 plan={plan}
-                disabled={plan.key === 'early_bird' && isExpired}
+                disabled={isCompleted || (plan.key === 'early_bird' && isExpired)}
+                disabledReason={isCompleted ? 'Đã hoàn thành · Đóng đăng ký' : 'Đã hết hạn đăng ký'}
                 earlyBirdDeadline={earlyBirdDeadline}
                 onClick={() => setActivePlan(plan)}
               />

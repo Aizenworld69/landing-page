@@ -10,7 +10,7 @@ export interface CreateRegistrationDto {
   company?: string;
   position?: string;
   referral: string;
-  plan: 'individual' | 'group';
+  plan: string;
   promoCode?: string;
 }
 

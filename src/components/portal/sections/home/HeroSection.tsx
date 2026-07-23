@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { Button } from '@/components/portal/ui/Button';
+import { AnimatedCounter } from '@/components/portal/ui/AnimatedCounter';
 
 export function HeroSection() {
   return (
-    <section className="hero-animated-bg relative overflow-hidden py-24 md:py-36 bg-gradient-to-b from-[#EBF5FF] via-[#E0EFFF] to-[#EFF6FF]">
+    <section className="hero-animated-bg relative overflow-hidden py-24 md:py-36 bg-transparent">
+
       {/* ═══ Animated Background Layers ═══ */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
 
@@ -74,26 +76,28 @@ export function HeroSection() {
       {/* ═══ Content ═══ */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Badge */}
-        <div className="animate-fade-in mb-6 inline-flex items-center gap-2 px-4 py-1.5 bg-white/80 backdrop-blur-md border border-sky-200/70 rounded-full shadow-sm shadow-sky-100/50">
-          <span className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
-          <span className="text-sky-600 text-xs font-semibold tracking-wide">Nền tảng đào tạo AI hàng đầu Việt Nam</span>
+        <div className="animate-fade-in mb-6 inline-flex items-center gap-2 px-4 py-1.5 bg-slate-900/80 backdrop-blur-md border border-amber-400/50 rounded-full shadow-lg shadow-orange-500/10 hover:scale-105 transition-transform duration-300">
+          <span className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse" />
+          <span className="text-amber-300 text-xs font-extrabold tracking-wide">Nền tảng đào tạo AI hàng đầu Việt Nam 🚀</span>
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6 tracking-tight">
+        <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-6 tracking-tight drop-shadow-md">
           {['Làm', 'Chủ', 'Tương', 'Lai', 'cùng'].map((word, i) => (
             <span
               key={word}
-              className="hero-word-reveal inline-block"
+              className="hero-word-reveal inline-block text-white"
               style={{ animationDelay: `${200 + i * 120}ms` }}
             >
               {word}&nbsp;
             </span>
           ))}
           <br />
-          <span className="hero-title-shimmer inline-block">AIZEN Education</span>
+          <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-orange-500 font-black drop-shadow-lg animate-pulse-glow">
+            AIZEN Education
+          </span>
         </h1>
 
-        <p className="animate-slide-up delay-200 text-base md:text-lg text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="animate-slide-up delay-200 text-base md:text-lg text-slate-100 font-medium max-w-2xl mx-auto mb-10 leading-relaxed drop-shadow-sm">
           Tăng tốc sự nghiệp với các khóa học chuyên nghiệp cao cấp, ứng dụng AI. Thiết kế dành cho các nhà lãnh đạo doanh nghiệp và những người đổi mới công nghệ.
         </p>
 
@@ -101,7 +105,7 @@ export function HeroSection() {
           <Link href="/portal/courses">
             <Button
               size="lg"
-              className="px-8 py-4 rounded-lg font-semibold bg-sky-500 hover:bg-sky-600 transition-all text-white border-0 text-base shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 hover:-translate-y-0.5 active:translate-y-0"
+              className="px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 transition-all text-white border-0 text-base shadow-xl shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-1 active:translate-y-0 cursor-pointer"
             >
               Khám phá chương trình học →
             </Button>
@@ -110,23 +114,28 @@ export function HeroSection() {
             <Button
               size="lg"
               variant="outline"
-              className="px-8 py-4 rounded-lg font-semibold text-base border-sky-200 text-sky-600 bg-white/70 backdrop-blur-sm hover:bg-white/90 hover:-translate-y-0.5 transition-all"
+              className="px-8 py-4 rounded-xl font-bold text-base border-white/60 text-white bg-slate-900/60 backdrop-blur-md hover:bg-slate-900/80 hover:border-amber-400 hover:text-amber-300 hover:-translate-y-1 transition-all cursor-pointer shadow-md"
             >
               Gặp gỡ giảng viên
             </Button>
           </Link>
         </div>
 
-        {/* Stats row */}
+        {/* Stats row with Animated Counter */}
         <div className="animate-fade-in delay-500 mt-14 grid grid-cols-3 gap-4 max-w-md mx-auto">
           {[
-            { value: '500+', label: 'Học viên' },
-            { value: '10+', label: 'Khóa học' },
-            { value: '98%', label: 'Hài lòng' },
+            { end: 500, suffix: '+', label: 'Học viên' },
+            { end: 10, suffix: '+', label: 'Khóa học' },
+            { end: 98, suffix: '%', label: 'Hài lòng' },
           ].map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="text-2xl font-extrabold text-sky-500">{s.value}</div>
-              <div className="text-xs text-gray-400 mt-0.5">{s.label}</div>
+            <div
+              key={s.label}
+              className="text-center bg-slate-900/60 p-4 rounded-2xl border border-slate-700/60 backdrop-blur-xl hover:border-sky-400/60 hover:-translate-y-1 transition-all duration-300 shadow-lg shadow-sky-950/20 group"
+            >
+              <div className="text-2xl md:text-3xl font-black text-amber-400 group-hover:text-sky-300 transition-colors">
+                <AnimatedCounter end={s.end} suffix={s.suffix} />
+              </div>
+              <div className="text-xs text-slate-200 font-semibold mt-1">{s.label}</div>
             </div>
           ))}
         </div>

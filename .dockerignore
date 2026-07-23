@@ -12,3 +12,7 @@ README.md
 CODEBASE-DOCS
 diff.txt
 commit_9ddf0ee.txt
+backend_backup
+build_output.txt
+eslint_output.txt
+tsc_output.txt

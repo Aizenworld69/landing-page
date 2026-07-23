@@ -1,7 +1,5 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Badge } from '@/components/portal/ui/Badge';
-import { Button } from '@/components/portal/ui/Button';
 import { formatDate, getDaysUntil } from '@/lib/portal/utils/format';
 import type { Course } from '@aizen/types';
 
@@ -13,93 +11,122 @@ interface CourseCardProps {
   isNearestUpcoming?: boolean;
 }
 
-export function CourseCard({ course, theme = 'light', showActions = true, isNearestUpcoming = false }: CourseCardProps) {
+export function CourseCard({ course, showActions = true, isNearestUpcoming = false }: CourseCardProps) {
   const daysUntil = course.start_date ? getDaysUntil(course.start_date) : null;
-  const isDark = theme === 'dark';
-
   const isUpcoming = course.status === 'upcoming';
   const isUrgent = isUpcoming && isNearestUpcoming;
 
   return (
     <div
-      className={`relative rounded-2xl overflow-hidden flex flex-col transition-transform hover:-translate-y-1 ${
-        isDark ? 'bg-navy-800 border border-gray-700' : 'bg-white border border-gray-100 shadow-sm'
-      } ${isUrgent ? 'ring-2 ring-orange-400 animate-pulse-glow-urgent' : ''}`}
+      className={`relative rounded-3xl overflow-hidden flex flex-col bg-slate-900/85 backdrop-blur-xl border border-slate-700/80 shadow-2xl transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-400/80 hover:shadow-amber-500/10 group min-h-[380px] justify-between ${
+        isUrgent ? 'ring-2 ring-amber-400/80 shadow-amber-500/20' : ''
+      }`}
     >
-      {/* Thumbnail */}
-      <div className="relative h-44 bg-gray-100">
-        {course.thumbnail_url ? (
-          <Image
-            src={course.thumbnail_url}
-            alt={course.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 33vw"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-50 to-blue-100">
-            <span className="text-4xl">🎓</span>
+      <div>
+        {/* Thumbnail */}
+        <div className="relative h-44 bg-slate-950 overflow-hidden">
+          {course.thumbnail_url ? (
+            <Image
+              src={course.thumbnail_url}
+              alt={course.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              sizes="(max-width: 768px) 100vw, 33vw"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-sky-950 to-slate-900">
+              <span className="text-4xl">🎓</span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="absolute top-3 left-3">
+            {isUrgent ? (
+              <span className="inline-block bg-gradient-to-r from-amber-500 to-orange-500 text-white font-extrabold text-[10px] px-3 py-1 rounded-full shadow-md shadow-orange-500/30 uppercase tracking-wider animate-pulse border border-amber-300/40">
+                • KHAI GIẢNG SAU {daysUntil} NGÀY
+              </span>
+            ) : course.status === 'upcoming' ? (
+              <span className="inline-block bg-amber-500/20 text-amber-300 border border-amber-400/40 backdrop-blur-md font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider">
+                SẮP DIỄN RA
+              </span>
+            ) : (
+              <span className="inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 backdrop-blur-md font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider">
+                ĐÃ HOÀN THÀNH
+              </span>
+            )}
           </div>
-        )}
-        <div className="absolute top-3 left-3">
-          <Badge variant={isUrgent ? 'urgent' : course.status} pulse={isUrgent}>
-            {isUrgent
-              ? `Khai giảng sau ${daysUntil} ngày`
-              : course.status === 'upcoming'
-              ? 'Sắp diễn ra'
-              : 'Đã hoàn thành'}
-          </Badge>
+        </div>
+
+        {/* Content */}
+        <div className="flex flex-col p-5 gap-2.5">
+          <div>
+            <p className="text-amber-400 font-extrabold text-[11px] uppercase tracking-widest mb-1">
+              {course.category || 'CHƯƠNG TRÌNH AI'}
+            </p>
+            <h3 className="font-black text-lg text-white leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
+              <Link href={`/courses/${course.slug}`}>
+                {course.title}
+              </Link>
+            </h3>
+          </div>
+
+          <p className="text-slate-300 text-xs leading-relaxed line-clamp-2 font-medium">
+            {course.description}
+          </p>
+
+          {/* Date / Countdown */}
+          {course.start_date && (
+            <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5 mt-1">
+              {course.status === 'upcoming' && daysUntil !== null && daysUntil > 0 ? (
+                <span className="text-amber-400 font-bold flex items-center gap-1">
+                  ⏱ Bắt đầu sau {daysUntil} ngày
+                </span>
+              ) : (
+                <span className="text-slate-400 flex items-center gap-1">
+                  📅 {formatDate(course.start_date)}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex flex-col flex-1 p-5 gap-3">
-        <div>
-          <p className={`text-xs font-medium uppercase tracking-wider mb-1.5 ${isDark ? 'text-primary-400' : 'text-primary-500'}`}>
-            {course.category}
-          </p>
-          <h3 className={`font-semibold text-base leading-snug line-clamp-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {course.title}
-          </h3>
-        </div>
-
-        <p className={`text-sm line-clamp-2 flex-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          {course.description}
-        </p>
-
-        {/* Date / Countdown */}
-        {course.start_date && (
-          <div className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            {course.status === 'upcoming' && daysUntil !== null && daysUntil > 0 ? (
-              <span className={isUrgent ? 'text-orange-600 font-semibold' : 'text-amber-500'}>
-                ⏱ Bắt đầu sau {daysUntil} ngày
-              </span>
-            ) : (
-              <span>📅 {formatDate(course.start_date)}</span>
-            )}
-          </div>
-        )}
-
-        {/* Actions */}
-        {showActions && (
-          <div className="flex gap-2 mt-1">
+      {/* Actions Footer */}
+      {showActions && (
+        <div className="p-5 pt-0">
+          <div className="flex gap-2.5 border-t border-slate-800/80 pt-4">
             {course.status === 'upcoming' ? (
               <Link href={`/courses/${course.slug}`} className="flex-1">
-                <Button size="sm" className="w-full">Đăng ký ngay</Button>
+                <button
+                  type="button"
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs py-2.5 rounded-xl shadow-md cursor-pointer transition-all hover:scale-[1.02]"
+                >
+                  Đăng ký ngay
+                </button>
               </Link>
             ) : (
               <>
                 <Link href={`/courses/${course.slug}`} className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full">Xem tóm tắt</Button>
+                  <button
+                    type="button"
+                    className="w-full bg-white/10 hover:bg-white/20 text-amber-300 border border-amber-400/40 font-extrabold text-xs py-2.5 rounded-xl transition-all cursor-pointer hover:border-amber-400"
+                  >
+                    Xem tóm tắt
+                  </button>
                 </Link>
                 <Link href={`/courses/${course.slug}#case`} className="flex-1">
-                  <Button variant="ghost" size="sm" className="w-full">Tình huống</Button>
+                  <button
+                    type="button"
+                    className="w-full bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs py-2.5 rounded-xl border border-slate-700 transition-all cursor-pointer"
+                  >
+                    Tình huống
+                  </button>
                 </Link>
               </>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

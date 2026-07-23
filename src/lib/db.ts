@@ -81,11 +81,11 @@ if (process.env.NEXT_PHASE !== 'phase-production-build') {
     -- Bảng vouchers: quản lý mã giảm giá
     CREATE TABLE IF NOT EXISTS vouchers (
       code TEXT PRIMARY KEY,
-      discount_percent INTEGER NOT NULL DEFAULT 20,
-      max_uses INTEGER NOT NULL DEFAULT 1,
-      used_count INTEGER NOT NULL DEFAULT 0,
+      discount_percent INTEGER NOT NULL,
+      max_uses INTEGER NOT NULL,
+      used_count INTEGER DEFAULT 0,
       expires_at DATETIME NOT NULL,
-      applicable_package TEXT NOT NULL DEFAULT '1 người',
+      applicable_package TEXT DEFAULT '1 người',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);

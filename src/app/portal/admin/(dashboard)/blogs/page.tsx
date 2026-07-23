@@ -143,7 +143,7 @@ export default function AdminBlogsPage() {
                         </button>
 
                         <Link
-                          href={`/admin/blogs/${blog.id}`}
+                          href={`/portal/admin/blogs/${blog.id}`}
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 transition-all"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

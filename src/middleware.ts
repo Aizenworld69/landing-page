@@ -6,19 +6,23 @@ const USER_PROTECTED = ['/portal/my-courses'];
 const ADMIN_PROTECTED = ['/portal/admin'];
 const ADMIN_PUBLIC = ['/portal/admin/dangnhap'];
 
-let jwksClient: ReturnType<typeof createRemoteJWKSet> | null = null;
+// JWKS cache keyed theo supabaseUrl — tránh stale nếu URL thay đổi giữa deployments
+const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
 function getJWKSClient(supabaseUrl: string) {
-  if (!jwksClient) {
+  if (!jwksCache.has(supabaseUrl)) {
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    jwksClient = createRemoteJWKSet(
-      new URL(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/.well-known/jwks.json`),
-      {
-        headers: anonKey ? { apikey: anonKey } : undefined,
-      }
+    jwksCache.set(
+      supabaseUrl,
+      createRemoteJWKSet(
+        new URL(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/.well-known/jwks.json`),
+        {
+          headers: anonKey ? { apikey: anonKey } : undefined,
+        }
+      )
     );
   }
-  return jwksClient;
+  return jwksCache.get(supabaseUrl)!;
 }
 
 async function verifyToken(token: string) {

@@ -12,6 +12,7 @@ export default function SidebarNav() {
     { icon: 'group', label: 'Registrations', href: '/admin' },
     { icon: 'school', label: 'Courses', href: '/admin/courses' },
     { icon: 'sell', label: 'Vouchers', href: '/admin/vouchers' },
+    { icon: 'campaign', label: 'Cấu hình Popup', href: '/admin/popup' },
     { icon: 'bar_chart', label: 'Reports', href: '/admin/reports' },
   ];
 

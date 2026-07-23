@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin, verifyAdmin, successResponse, errorResponse } from '@/lib/portal/supabase-server';
 import { applyCode } from '@/lib/portal/promo-codes';
+import { checkRateLimit, getClientIp } from '@/lib/portal/rate-limit';
 
 async function verifyCourse(courseId: string) {
   const { data: course, error } = await supabaseAdmin
@@ -76,6 +77,11 @@ async function sendLarkIndividual(params: {
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    if (!checkRateLimit(clientIp, 'registrations', 5, 60_000)) {
+      return errorResponse('Bạn đã gửi quá nhiều yêu cầu đăng ký. Vui lòng thử lại sau ít phút.', 429, req.nextUrl.pathname);
+    }
+
     const body = await req.json();
     const { courseId, fullName, phone, email, company, position, referral, plan, promoCode } = body;
 
@@ -171,7 +177,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabaseAdmin
       .from('registrations')
-      .select('id, full_name, phone, email, company, position, referral, plan, group_id, created_at, course_id, courses(title, price, price_group)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -182,15 +188,32 @@ export async function GET(req: NextRequest) {
       query = query.eq('course_id', courseId);
     }
 
-    const { data, error, count } = await query;
+    const { data: regData, error: regError, count } = await query;
 
-    if (error) {
-      console.error('List registrations failed:', error);
-      return errorResponse('Lỗi khi truy vấn dữ liệu', 400, req.nextUrl.pathname);
+    if (regError) {
+      console.error('List registrations failed details:', JSON.stringify(regError));
+      return errorResponse(regError.message || 'Lỗi khi truy vấn dữ liệu', 400, req.nextUrl.pathname);
     }
 
+    // Safely join course details without relying on PostgREST relationship cache
+    const courseIds = Array.from(new Set((regData || []).map((r) => r.course_id).filter(Boolean)));
+    const courseMap = new Map<string, { title: string; price?: number; price_group?: number }>();
+
+    if (courseIds.length > 0) {
+      const { data: courseList } = await supabaseAdmin
+        .from('courses')
+        .select('id, title, price, price_group')
+        .in('id', courseIds);
+      (courseList || []).forEach((c) => courseMap.set(c.id, c));
+    }
+
+    const formattedData = (regData || []).map((r) => ({
+      ...r,
+      courses: courseMap.get(r.course_id) || null,
+    }));
+
     return successResponse({
-      data: data || [],
+      data: formattedData,
       total: count || 0,
       page,
       limit,
