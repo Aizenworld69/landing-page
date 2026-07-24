@@ -26,6 +26,35 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+export function formatDateRange(startDate?: string | Date | null, endDate?: string | Date | null): string {
+  if (!startDate) return '';
+  const dStart = new Date(startDate);
+  if (isNaN(dStart.getTime())) return '';
+
+  const dayStart = dStart.getDate();
+  const monthStart = dStart.getMonth() + 1;
+  const yearStart = dStart.getFullYear();
+
+  if (!endDate) {
+    return `${dayStart < 10 ? '0' + dayStart : dayStart} Tháng ${monthStart}`;
+  }
+
+  const dEnd = new Date(endDate);
+  if (isNaN(dEnd.getTime())) {
+    return `${dayStart < 10 ? '0' + dayStart : dayStart} Tháng ${monthStart}`;
+  }
+
+  const dayEnd = dEnd.getDate();
+  const monthEnd = dEnd.getMonth() + 1;
+  const yearEnd = dEnd.getFullYear();
+
+  if (monthStart === monthEnd && yearStart === yearEnd) {
+    return `${dayStart} - ${dayEnd} Tháng ${monthStart}`;
+  } else {
+    return `${dayStart}/${monthStart} - ${dayEnd}/${monthEnd}`;
+  }
+}
+
 export function isCourseStarted(date: string | null): boolean {
   if (!date) return false;
   return isPast(new Date(date));

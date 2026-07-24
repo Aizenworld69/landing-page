@@ -3,12 +3,14 @@ export function adjustCourseStatus<T extends { status: string; start_date?: stri
 
   let merged: any = course;
   const meta = course.plans_config?._meta || {};
-  if (meta.schedule_time || meta.location || meta.location_url) {
+  if (meta.schedule_time || meta.location || meta.location_url || meta.end_date || meta.early_bird_deadline) {
     merged = {
       ...course,
       schedule_time: (course as any).schedule_time ?? meta.schedule_time ?? null,
       location: (course as any).location ?? meta.location ?? null,
       location_url: (course as any).location_url ?? meta.location_url ?? null,
+      end_date: (course as any).end_date ?? meta.end_date ?? null,
+      early_bird_deadline: (course as any).early_bird_deadline ?? meta.early_bird_deadline ?? null,
     };
   }
 
