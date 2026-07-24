@@ -120,8 +120,16 @@ export default function PromoPopup({
             if (isSubscribed) setIsOpen(true);
           }, delay);
         }
-      } else if (data && data.is_active === 0) {
+      } else {
+        setConfig(data || null);
         setIsOpen(false);
+        try {
+          if (data) {
+            localStorage.setItem('aizen_cached_popup_config', JSON.stringify(data));
+          } else {
+            localStorage.removeItem('aizen_cached_popup_config');
+          }
+        } catch (_) {}
       }
     }
 

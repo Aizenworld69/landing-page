@@ -949,6 +949,9 @@ function readJsonFallback(): PopupConfig | null {
 }
 
 export async function getPopupConfigAction(): Promise<PopupConfig | null> {
+  const localConfig = readJsonFallback();
+  let sbConfig: PopupConfig | null = null;
+
   // 1. Thử đọc từ Supabase Database
   try {
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -959,17 +962,36 @@ export async function getPopupConfigAction(): Promise<PopupConfig | null> {
         .maybeSingle();
 
       if (!error && data && data.title) {
-        return data as PopupConfig;
+        sbConfig = data as PopupConfig;
       }
     }
   } catch (sbErr) {
     console.warn('Lỗi đọc Supabase popup:', sbErr);
   }
 
-  // 2. Dự phòng mượt mà từ file lưu trữ nếu chưa tạo bảng trên Supabase Cloud
-  const localConfig = readJsonFallback();
+  // Kết hợp thông minh dựa trên thời gian cập nhật gần nhất
+  if (localConfig && sbConfig) {
+    const localTime = new Date(localConfig.updated_at || 0).getTime();
+    const sbTime = new Date(sbConfig.updated_at || 0).getTime();
+
+    // Nếu Local file được lưu gần hơn Supabase DB -> Ưu tiên localConfig
+    if (localTime >= sbTime) {
+      return {
+        ...sbConfig,
+        ...localConfig,
+      };
+    }
+    return {
+      ...localConfig,
+      ...sbConfig,
+    };
+  }
+
   if (localConfig && localConfig.title) {
     return localConfig;
+  }
+  if (sbConfig && sbConfig.title) {
+    return sbConfig;
   }
 
   // 3. Mặc định khởi tạo nếu hoàn toàn trống
@@ -1051,7 +1073,7 @@ export async function updatePopupConfigAction(data: {
       updated_at: new Date().toISOString(),
     };
 
-    // Luôn lưu trữ để đảm bảo không bao giờ mất cài đặt
+    // Luôn lưu trữ file Local JSON để đảm bảo không bao giờ mất cài đặt
     saveJsonFallback(payload);
 
     // Thử đồng bộ lên Supabase Cloud Database
@@ -1061,7 +1083,24 @@ export async function updatePopupConfigAction(data: {
       if (!error) {
         sbSuccess = true;
       } else {
-        console.warn('Cảnh báo Supabase upsert (Cần chạy SQL script tạo bảng popups):', error.message);
+        console.warn('Cảnh báo Supabase upsert full payload:', error.message);
+        // Fallback upsert basic payload nếu Supabase DB schema chưa có các cột màu tùy chỉnh mới
+        const basicPayload = {
+          id: payload.id,
+          title: payload.title,
+          title_color: payload.title_color,
+          description: payload.description,
+          image_url: payload.image_url,
+          bg_image_url: payload.bg_image_url,
+          cta_text: payload.cta_text,
+          cta_link: payload.cta_link,
+          countdown_end: payload.countdown_end,
+          delay_seconds: payload.delay_seconds,
+          is_active: payload.is_active,
+          updated_at: payload.updated_at,
+        };
+        const { error: err2 } = await supabaseAdmin.from('popups').upsert(basicPayload);
+        if (!err2) sbSuccess = true;
       }
     }
 

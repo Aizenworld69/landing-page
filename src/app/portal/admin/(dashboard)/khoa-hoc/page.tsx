@@ -44,6 +44,7 @@ const EMPTY_FORM: CourseFormInput = {
   status: 'upcoming',
   category: '',
   start_date: '',
+  end_date: '',
   schedule_time: '',
   location: '',
   location_url: '',
@@ -300,6 +301,7 @@ export default function KhoaHocPage() {
       status: course.status,
       category: course.category ?? '',
       start_date: course.start_date ? course.start_date.slice(0, 10) : '',
+      end_date: course.end_date ? course.end_date.slice(0, 10) : '',
       schedule_time: course.schedule_time ?? '',
       location: course.location ?? '',
       location_url: course.location_url ?? '',
@@ -374,6 +376,7 @@ export default function KhoaHocPage() {
         price: Number(form.price) || 0,
         price_group: Number(form.price_group) || 0,
         start_date: form.start_date || undefined,
+        end_date: form.end_date || undefined,
         schedule_time: form.schedule_time || undefined,
         location: form.location || undefined,
         location_url: form.location_url || undefined,
@@ -841,17 +844,28 @@ export default function KhoaHocPage() {
                     </div>
                   </div>
 
-                  {/* Start date & Instructor */}
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Start date, End date & Instructor */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                        Ngày khai giảng
+                        Ngày khai giảng (bắt đầu)
                       </label>
                       <input
                         type="date"
                         value={form.start_date}
                         onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all"
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                        Ngày kết thúc (nếu học 2 ngày)
+                      </label>
+                      <input
+                        type="date"
+                        value={form.end_date ?? ''}
+                        onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all"
                       />
                     </div>
                     <div>
@@ -861,7 +875,7 @@ export default function KhoaHocPage() {
                       <select
                         value={form.instructor_id}
                         onChange={(e) => setForm((f) => ({ ...f, instructor_id: e.target.value }))}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm font-semibold focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all cursor-pointer"
+                        className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm font-semibold focus:outline-none focus:bg-white focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition-all cursor-pointer"
                       >
                         <option value="">— Chọn giảng viên —</option>
                         {instructors.map((i) => (

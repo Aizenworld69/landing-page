@@ -17,7 +17,7 @@ function formatDate(dateStr: string | null) {
   return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function formatWeekdayDate(dateStr: string | null) {
+function formatWeekdayDate(dateStr: string | null, endDateStr?: string | null) {
   if (!dateStr) return null;
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return null;
@@ -26,6 +26,16 @@ function formatWeekdayDate(dateStr: string | null) {
   const weekday = weekdays[d.getDay()];
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
+
+  if (endDateStr) {
+    const dEnd = new Date(endDateStr);
+    if (!isNaN(dEnd.getTime())) {
+      const weekdayEnd = weekdays[dEnd.getDay()];
+      const dayEnd = String(dEnd.getDate()).padStart(2, '0');
+      const monthEnd = String(dEnd.getMonth() + 1).padStart(2, '0');
+      return `${weekday} & ${weekdayEnd}, ${day}/${month} - ${dayEnd}/${monthEnd}`;
+    }
+  }
 
   return `${weekday}, ${day}/${month}`;
 }
@@ -42,7 +52,7 @@ const fadeUp = {
 
 export function CourseHero({ course }: CourseHeroProps) {
   const date = formatDate(course.start_date);
-  const formattedWeekdayDate = formatWeekdayDate(course.start_date);
+  const formattedWeekdayDate = formatWeekdayDate(course.start_date, course.end_date);
   const isCompleted = course.status === 'completed';
 
   return (

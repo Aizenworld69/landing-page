@@ -3,16 +3,20 @@ import { supabaseAdmin, successResponse, errorResponse } from '@/lib/portal/supa
 import { applyCode } from '@/lib/portal/promo-codes';
 import { checkRateLimit, getClientIp } from '@/lib/portal/rate-limit';
 import { randomUUID } from 'crypto';
+import db from '@/lib/db';
 
-async function verifyCourse(courseId: string) {
-  const { data: course, error } = await supabaseAdmin
+async function verifyCourse(courseIdOrSlug: string) {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(courseIdOrSlug);
+  const query = supabaseAdmin
     .from('courses')
-    .select('id, title, status, price, price_group')
-    .eq('id', courseId)
-    .single();
+    .select('id, title, status, price, price_group');
+
+  const { data: course, error } = isUuid
+    ? await query.eq('id', courseIdOrSlug).single()
+    : await query.eq('slug', courseIdOrSlug).single();
 
   if (error || !course) return null;
-  if (course.status !== 'upcoming') return null;
+  if (course.status === 'completed') return null;
   return course;
 }
 
@@ -105,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     if (promoCode) {
       const planKey = members.length === 4 ? 'group_4' : 'group_2';
-      const promoResult = await applyCode(promoCode, course_id, planKey);
+      const promoResult = await applyCode(promoCode, course.id, planKey);
       if (!promoResult.valid) {
         return errorResponse(promoResult.message, 400, req.nextUrl.pathname);
       }
@@ -121,7 +125,7 @@ export async function POST(req: NextRequest) {
 
     const groupId = randomUUID();
     const rows = members.map((m) => ({
-      course_id,
+      course_id: course.id,
       full_name: m.full_name,
       phone: m.phone,
       email: m.email,
@@ -134,17 +138,29 @@ export async function POST(req: NextRequest) {
       discount_amount: discountAmount,
     }));
 
+    let createdAt = new Date().toISOString();
+
     const { data, error } = await supabaseAdmin
       .from('registrations')
       .insert(rows)
       .select('id, created_at');
 
     if (error) {
-      console.error('Insert group registration failed:', error);
-      return errorResponse('Đăng ký thất bại, vui lòng thử lại', 400, req.nextUrl.pathname);
+      console.warn('Insert group registration RLS/Error fallback to SQLite:', error.message || error);
+      try {
+        const stmt = db.prepare(`
+          INSERT INTO registrations (fullname, phone, email, referral, role, company, payment_status, amount)
+          VALUES (?, ?, ?, ?, ?, ?, 'UNPAID', ?)
+        `);
+        for (const m of members) {
+          stmt.run(m.full_name, m.phone, m.email, referral, m.position || '', m.company || '', course.price_group || 0);
+        }
+      } catch (sqErr) {
+        console.error('SQLite fallback group insert error:', sqErr);
+      }
+    } else if (data?.[0]?.created_at) {
+      createdAt = data[0].created_at;
     }
-
-    const createdAt = data?.[0]?.created_at || new Date().toISOString();
 
     sendLarkGroup({
       courseTitle: course.title,

@@ -1,6 +1,7 @@
 import { HeroSection } from '@/components/portal/sections/home/HeroSection';
 import { UpcomingCoursesSection } from '@/components/portal/sections/home/UpcomingCoursesSection';
 import { CompletedCoursesPreviewSection } from '@/components/portal/sections/home/CompletedCoursesPreviewSection';
+import { VerticalThreeSectionModal } from '@/components/portal/sections/home/VerticalThreeSectionModal';
 import type { Course } from '@aizen/types';
 import { fetchCoursesServer } from '@/lib/portal/server-data';
 
@@ -24,6 +25,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <VerticalThreeSectionModal />
       <HeroSection />
       <UpcomingCoursesSection courses={upcomingCourses} />
       <CompletedCoursesPreviewSection courses={completedCourses} />

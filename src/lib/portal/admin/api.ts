@@ -147,6 +147,7 @@ export interface Course {
   status: CourseStatus;
   category: string;
   start_date?: string | null;
+  end_date?: string | null;
   schedule_time?: string | null;
   location?: string | null;
   location_url?: string | null;
@@ -190,6 +191,7 @@ export interface CourseFormInput {
   status: CourseStatus;
   category: string;
   start_date?: string;
+  end_date?: string;
   schedule_time?: string;
   location?: string;
   location_url?: string;

@@ -102,7 +102,14 @@ export async function PATCH(
       const extraMeta: Record<string, any> = {};
       const retryBody: Record<string, any> = { ...cleanBody };
 
-      ['schedule_time', 'location', 'location_url'].forEach((field) => {
+      // Extract specific missing column if present in error message
+      const match = error.message.match(/Could not find the '([^']+)' column/i);
+      if (match && match[1] && match[1] in retryBody) {
+        extraMeta[match[1]] = retryBody[match[1]];
+        delete retryBody[match[1]];
+      }
+
+      ['schedule_time', 'location', 'location_url', 'end_date', 'early_bird_deadline'].forEach((field) => {
         if (field in retryBody) {
           extraMeta[field] = retryBody[field];
           delete retryBody[field];

@@ -2,16 +2,16 @@
   "id": 1,
   "title": "ƯU ĐÃI ĐẶC BIỆT KHÓA HỌC",
   "title_color": "#ef4444",
-  "description": "<p><span style=\"color: rgb(52, 211, 153);\">Đăng ký ngay hôm nay để</span></p><p><span style=\"color: rgb(52, 211, 153);\">hận ngay voucher ưu đãi 20% học phí!</span></p>",
+  "description": "<p><span style=\"color: rgb(52, 211, 153);\">Đăng ký ngay hôm nay để</span></p><p><span style=\"color: rgb(52, 211, 153);\">hận ngay voucher ưu đãi 20% học phí!d</span></p>",
   "image_url": "https://qdhlzyijmyllqmmdzmgi.supabase.co/storage/v1/object/public/blogs/popups/popup_1784859583891_khoa6_under5MB.webp",
   "bg_image_url": "",
   "cta_text": "ĐĂNG KÝ NGAY",
-  "cta_bg_color": "#f97316",
+  "cta_bg_color": "#d97706",
   "cta_text_color": "#ffffff",
   "cta_link": "/portal/courses/aisalemarkertingfullstack",
   "countdown_end": "2026-08-30T02:53:00.000Z",
-  "timer_color": "#34d399",
+  "timer_color": "#60a5fa",
   "delay_seconds": 3,
   "is_active": 0,
-  "updated_at": "2026-07-24T03:14:25.121Z"
+  "updated_at": "2026-07-24T06:50:01.221Z"
 }

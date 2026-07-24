@@ -11,6 +11,7 @@ export interface Course {
   status: CourseStatus;
   category: string;
   start_date: string | null;
+  end_date?: string | null;
   schedule_time?: string | null;
   location?: string | null;
   location_url?: string | null;
