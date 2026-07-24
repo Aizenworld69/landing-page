@@ -30,6 +30,24 @@ const TITLE_COLOR_PALETTE = [
   { name: 'Tím', value: '#a855f7' },
 ];
 
+const CTA_BG_PALETTE = [
+  { name: 'Xanh Ngọc', value: '#059669' },
+  { name: 'Cam Nổi', value: '#f97316' },
+  { name: 'Xanh Dương', value: '#0284c7' },
+  { name: 'Đỏ Rực', value: '#dc2626' },
+  { name: 'Tím', value: '#7c3aed' },
+  { name: 'Vàng', value: '#d97706' },
+];
+
+const TIMER_COLOR_PALETTE = [
+  { name: 'Xanh Ngọc', value: '#34d399' },
+  { name: 'Vàng Kim', value: '#f59e0b' },
+  { name: 'Xanh Dương', value: '#60a5fa' },
+  { name: 'Đỏ', value: '#f87171' },
+  { name: 'Cam', value: '#fb923c' },
+  { name: 'Trắng', value: '#ffffff' },
+];
+
 export default function PortalAdminPopupPage() {
   const [config, setConfig] = useState<PopupConfig | null>(null);
   const [courses, setCourses] = useState<CourseOption[]>([]);
@@ -49,8 +67,11 @@ export default function PortalAdminPopupPage() {
     image_url: '',
     bg_image_url: '',
     cta_text: 'ĐĂNG KÝ NGAY',
+    cta_bg_color: '#059669',
+    cta_text_color: '#ffffff',
     cta_link: '#register',
     countdown_end: '',
+    timer_color: '#34d399',
     delay_seconds: 0,
     is_active: 1,
   });
@@ -70,8 +91,11 @@ export default function PortalAdminPopupPage() {
             image_url: pData.image_url || '',
             bg_image_url: pData.bg_image_url || '',
             cta_text: pData.cta_text || 'ĐĂNG KÝ NGAY',
+            cta_bg_color: pData.cta_bg_color || '#059669',
+            cta_text_color: pData.cta_text_color || '#ffffff',
             cta_link: pData.cta_link || '#register',
             countdown_end: formatDateTimeLocal(pData.countdown_end) || formatDateTimeLocal(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()),
+            timer_color: pData.timer_color || '#34d399',
             delay_seconds: pData.delay_seconds ?? 0,
             is_active: pData.is_active ?? 1,
           });
@@ -481,6 +505,65 @@ export default function PortalAdminPopupPage() {
               </div>
             </div>
 
+            {/* Màu nút Đăng ký & Màu chữ nút */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-700">🎨 Chọn màu nền Nút Đăng ký (CTA Button):</span>
+                <div className="flex items-center gap-1.5">
+                  {CTA_BG_PALETTE.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      title={c.name}
+                      onClick={() => setFormData((prev) => ({ ...prev, cta_bg_color: c.value }))}
+                      className={`w-5 h-5 rounded-full border border-slate-300 transition-transform ${
+                        formData.cta_bg_color === c.value ? 'scale-125 ring-2 ring-indigo-500 ring-offset-1' : 'hover:scale-110'
+                      }`}
+                      style={{ backgroundColor: c.value }}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    value={formData.cta_bg_color}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, cta_bg_color: e.target.value }))}
+                    className="w-6 h-6 rounded cursor-pointer border-0 p-0 ml-1"
+                    title="Tùy chọn màu nút"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-slate-200/60 pt-2">
+                <span className="font-bold text-slate-700">✍️ Chọn màu chữ trên Nút:</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, cta_text_color: '#ffffff' }))}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition ${
+                      formData.cta_text_color === '#ffffff' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-300'
+                    }`}
+                  >
+                    Trắng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, cta_text_color: '#0f172a' }))}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold border transition ${
+                      formData.cta_text_color === '#0f172a' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-300'
+                    }`}
+                  >
+                    Đen
+                  </button>
+                  <input
+                    type="color"
+                    value={formData.cta_text_color}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, cta_text_color: e.target.value }))}
+                    className="w-6 h-6 rounded cursor-pointer border-0 p-0 ml-1"
+                    title="Màu chữ tùy chọn"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Chọn nhanh Khóa học gợi ý */}
             {courses.length > 0 && (
               <div className="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100">
@@ -506,34 +589,61 @@ export default function PortalAdminPopupPage() {
               </div>
             )}
 
-            {/* Ngày đếm ngược & Delay */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Thời gian kết thúc đếm ngược
-                </label>
-                <input
-                  type="datetime-local"
-                  name="countdown_end"
-                  value={formData.countdown_end}
-                  onChange={handleChange}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white transition-all"
-                />
+            {/* Ngày đếm ngược & Delay + Màu số đếm ngược */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                <span className="font-bold text-slate-700">⏱️ Màu số Đếm ngược (Timer Colors):</span>
+                <div className="flex items-center gap-1.5">
+                  {TIMER_COLOR_PALETTE.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      title={c.name}
+                      onClick={() => setFormData((prev) => ({ ...prev, timer_color: c.value }))}
+                      className={`w-5 h-5 rounded-full border border-slate-300 transition-transform ${
+                        formData.timer_color === c.value ? 'scale-125 ring-2 ring-indigo-500 ring-offset-1' : 'hover:scale-110'
+                      }`}
+                      style={{ backgroundColor: c.value }}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    value={formData.timer_color}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, timer_color: e.target.value }))}
+                    className="w-6 h-6 rounded cursor-pointer border-0 p-0 ml-1"
+                    title="Tùy chọn màu số đếm ngược"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Độ trễ hiển thị (Giây)
-                </label>
-                <input
-                  type="number"
-                  name="delay_seconds"
-                  min={0}
-                  max={60}
-                  value={formData.delay_seconds}
-                  onChange={handleChange}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white transition-all"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Thời gian kết thúc đếm ngược
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="countdown_end"
+                    value={formData.countdown_end}
+                    onChange={handleChange}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Độ trễ hiển thị (Giây)
+                  </label>
+                  <input
+                    type="number"
+                    name="delay_seconds"
+                    min={0}
+                    max={60}
+                    value={formData.delay_seconds}
+                    onChange={handleChange}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white transition-all"
+                  />
+                </div>
               </div>
             </div>
 

@@ -1412,10 +1412,14 @@ export default function KhoaHocPage() {
                     {/* Individual */}
                     <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30 flex flex-col gap-3">
                       <div className="flex flex-col border-b border-slate-100 pb-2">
-                        <span className="text-xs font-bold text-slate-700 font-black">2. Gói Cá nhân (Giá gốc)</span>
-                        <span className="text-[11px] font-bold text-sky-500 mt-0.5">
-                          Giá hiện hành: {formatVnd(form.plans_config?.individual?.price ?? form.price)}
-                        </span>
+                        <span className="text-xs font-bold text-slate-700 font-black">2. Gói Cá nhân</span>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {form.plans_config?.individual?.original_price && (
+                            <span className="text-[11px] text-slate-400 line-through">
+                              Gốc: {formatVnd(form.plans_config.individual.original_price)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="flex flex-col gap-2.5">
@@ -1439,15 +1443,43 @@ export default function KhoaHocPage() {
                             className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
                           />
                         </div>
+                        {/* Giá gốc — hiển thị gạch ngang */}
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Học phí tùy chỉnh (VNĐ)</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                            💰 Giá gốc (VNĐ) — hiển thị gạch ngang
+                          </label>
+                          <input
+                            type="number"
+                            value={form.plans_config?.individual?.original_price ?? ''}
+                            placeholder={`VD: ${form.price} (để trống = không gạch ngang)`}
+                            onChange={(e) => updatePlanConfig('individual', 'original_price', e.target.value ? Number(e.target.value) : undefined)}
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
+                          />
+                          {form.plans_config?.individual?.original_price ? (
+                            <p className="text-[10px] text-slate-600 font-semibold mt-0.5">
+                              → {formatVnd(form.plans_config.individual.original_price)}
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-slate-400 mt-0.5">Giá trước khi giảm, hiển thị gạch ngang trên form đăng ký</p>
+                          )}
+                        </div>
+                        {/* Giá khuyến mãi — giá thực tính tiền */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-emerald-600 uppercase mb-1">
+                            🏷️ Giá khuyến mãi (VNĐ) — giá tính tiền thực
+                          </label>
                           <input
                             type="number"
                             value={form.plans_config?.individual?.price ?? ''}
-                            placeholder={`Mặc định: ${form.price}`}
+                            placeholder={`Mặc định: ${form.price} (từ tab Thông tin)`}
                             onChange={(e) => updatePlanConfig('individual', 'price', e.target.value ? Number(e.target.value) : undefined)}
-                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
+                            className="w-full px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50/40 text-slate-800 text-xs focus:outline-none focus:border-emerald-500 transition-all font-semibold"
                           />
+                          {form.plans_config?.individual?.price && (
+                            <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                              → {formatVnd(form.plans_config.individual.price)}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -1545,9 +1577,13 @@ export default function KhoaHocPage() {
                     <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30 flex flex-col gap-3">
                       <div className="flex flex-col border-b border-slate-100 pb-2">
                         <span className="text-xs font-bold text-slate-700 font-black">3. Gói Nhóm 2 người</span>
-                        <span className="text-[11px] font-bold text-sky-500 mt-0.5">
-                          Giá hiện hành: {formatVnd((form.plans_config?.group_2?.price ?? form.price_group) * 2)}
-                        </span>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {form.plans_config?.group_2?.original_price && (
+                            <span className="text-[11px] text-slate-400 line-through">
+                              Gốc: {formatVnd(form.plans_config.group_2.original_price * 2)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="flex flex-col gap-2.5">
@@ -1571,15 +1607,47 @@ export default function KhoaHocPage() {
                             className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
                           />
                         </div>
+                        {/* Giá gốc/người — dùng để hiển thị gạch ngang trên UI */}
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Học phí tùy chỉnh (VNĐ/Người)</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                            💰 Giá gốc/người (VNĐ) — hiển thị gạch ngang
+                          </label>
+                          <input
+                            type="number"
+                            value={form.plans_config?.group_2?.original_price ?? ''}
+                            placeholder={`VD: ${form.price} (giá cá nhân, để gạch ngang)`}
+                            onChange={(e) => updatePlanConfig('group_2', 'original_price', e.target.value ? Number(e.target.value) : undefined)}
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
+                          />
+                          {form.plans_config?.group_2?.original_price ? (
+                            <p className="text-[10px] text-slate-600 font-semibold mt-0.5">
+                              → {formatVnd(form.plans_config.group_2.original_price)}/người
+                              &nbsp;·&nbsp;Tổng: {formatVnd(form.plans_config.group_2.original_price * 2)}
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-slate-400 mt-0.5">Giá trước khi giảm, hiển thị gạch ngang trên form đăng ký</p>
+                          )}
+                        </div>
+                        {/* Giá khuyến mãi/người — giá thực tính tổng */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-emerald-600 uppercase mb-1">
+                            🏷️ Giá khuyến mãi/người (VNĐ) — giá tính tiền thực
+                          </label>
                           <input
                             type="number"
                             value={form.plans_config?.group_2?.price ?? ''}
-                            placeholder={`Mặc định: ${form.price_group}`}
+                            placeholder={`Mặc định: ${form.price_group} (từ tab Thông tin)`}
                             onChange={(e) => updatePlanConfig('group_2', 'price', e.target.value ? Number(e.target.value) : undefined)}
-                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
+                            className="w-full px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50/40 text-slate-800 text-xs focus:outline-none focus:border-emerald-500 transition-all font-semibold"
                           />
+                          {form.plans_config?.group_2?.price ? (
+                            <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                              → {formatVnd(form.plans_config.group_2.price)}/người
+                              &nbsp;·&nbsp;Tổng: {formatVnd(form.plans_config.group_2.price * 2)}
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-slate-400 mt-0.5">Tổng nhóm 2 người = giá này × 2</p>
+                          )}
                         </div>
 
                         <div>
@@ -1678,9 +1746,13 @@ export default function KhoaHocPage() {
                     <div className="p-4 rounded-2xl border border-slate-100 bg-slate-50/30 flex flex-col gap-3">
                       <div className="flex flex-col border-b border-slate-100 pb-2">
                         <span className="text-xs font-bold text-slate-700 font-black">4. Gói Nhóm 4 người</span>
-                        <span className="text-[11px] font-bold text-sky-500 mt-0.5">
-                          Giá hiện hành: {formatVnd(form.plans_config?.group_4?.price ?? ((form.price_group - 150000) * 4))}
-                        </span>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {form.plans_config?.group_4?.original_price && (
+                            <span className="text-[11px] text-slate-400 line-through">
+                              Gốc: {formatVnd(form.plans_config.group_4.original_price * 4)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="flex flex-col gap-2.5">
@@ -1704,15 +1776,47 @@ export default function KhoaHocPage() {
                             className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
                           />
                         </div>
+                        {/* Giá gốc/người — dùng để hiển thị gạch ngang trên UI */}
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Học phí tổng tùy chỉnh (VNĐ)</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                            💰 Giá gốc/người (VNĐ) — hiển thị gạch ngang
+                          </label>
+                          <input
+                            type="number"
+                            value={form.plans_config?.group_4?.original_price ?? ''}
+                            placeholder={`VD: ${form.price} (giá cá nhân, để gạch ngang)`}
+                            onChange={(e) => updatePlanConfig('group_4', 'original_price', e.target.value ? Number(e.target.value) : undefined)}
+                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
+                          />
+                          {form.plans_config?.group_4?.original_price ? (
+                            <p className="text-[10px] text-slate-600 font-semibold mt-0.5">
+                              → {formatVnd(form.plans_config.group_4.original_price)}/người
+                              &nbsp;·&nbsp;Tổng: {formatVnd(form.plans_config.group_4.original_price * 4)}
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-slate-400 mt-0.5">Giá trước khi giảm, hiển thị gạch ngang trên form đăng ký</p>
+                          )}
+                        </div>
+                        {/* Giá khuyến mãi/người — giá thực tính tổng */}
+                        <div>
+                          <label className="block text-[10px] font-bold text-emerald-600 uppercase mb-1">
+                            🏷️ Giá khuyến mãi/người (VNĐ) — giá tính tiền thực
+                          </label>
                           <input
                             type="number"
                             value={form.plans_config?.group_4?.price ?? ''}
-                            placeholder={`Mặc định: ${(form.price_group - 150000) * 4}`}
+                            placeholder={`Mặc định: ${form.price_group - 150000}/người`}
                             onChange={(e) => updatePlanConfig('group_4', 'price', e.target.value ? Number(e.target.value) : undefined)}
-                            className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs focus:outline-none focus:border-sky-500 transition-all"
+                            className="w-full px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50/40 text-slate-800 text-xs focus:outline-none focus:border-emerald-500 transition-all font-semibold"
                           />
+                          {form.plans_config?.group_4?.price ? (
+                            <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                              → {formatVnd(form.plans_config.group_4.price)}/người
+                              &nbsp;·&nbsp;Tổng: {formatVnd(form.plans_config.group_4.price * 4)}
+                            </p>
+                          ) : (
+                            <p className="text-[10px] text-slate-400 mt-0.5">Tổng nhóm 4 người = giá này × 4</p>
+                          )}
                         </div>
 
                         <div>

@@ -10,10 +10,27 @@ import {
 } from '@/lib/portal/api/registrations.api';
 
 // ─── Types ───────────────────────────────────────────
+interface PlanOverride {
+  price?: number;
+  original_price?: number;
+  label?: string;
+  sublabel?: string;
+  [key: string]: unknown;
+}
+
+interface PlansConfig {
+  early_bird?: PlanOverride;
+  individual?: PlanOverride;
+  group_2?: PlanOverride;
+  group_4?: PlanOverride;
+  [key: string]: PlanOverride | undefined;
+}
+
 interface RegistrationFormProps {
   courseId: string;
   price: number;
   priceGroup: number;
+  plansConfig?: PlansConfig | null;
 }
 
 type PlanKey = 'early_bird' | 'individual' | 'group_2' | 'group_4';
@@ -367,8 +384,15 @@ function PriceSummary({
 }
 
 // ─── Main Component ───────────────────────────────────
-export function RegistrationForm({ courseId, price, priceGroup }: RegistrationFormProps) {
-  const group4Price = Math.round(priceGroup * 1.8);
+export function RegistrationForm({ courseId, price, priceGroup, plansConfig }: RegistrationFormProps) {
+  // Đọc giá từ plans_config nếu có, fallback về công thức cũ
+  const indivPrice = plansConfig?.individual?.price ?? price;
+  const indivOriginalPrice = plansConfig?.individual?.original_price ?? null; // null = không gạch ngang
+  const g2Price = plansConfig?.group_2?.price ?? priceGroup;
+  const g2OriginalPrice = plansConfig?.group_2?.original_price ?? price; // fallback: giá cá nhân
+  const g4Price = plansConfig?.group_4?.price ?? Math.round(priceGroup * 1.8 / 4);
+  const g4OriginalPrice = plansConfig?.group_4?.original_price ?? price; // fallback: giá cá nhân
+  const group4TotalPrice = g4Price * 4;
 
   const PLANS: PlanConfig[] = [
     {
@@ -380,21 +404,23 @@ export function RegistrationForm({ courseId, price, priceGroup }: RegistrationFo
     },
     {
       key: 'individual', label: '1 người', sublabel: 'Đăng ký cá nhân',
-      priceLabel: formatCurrency(price),
-      memberCount: 1, basePrice: price,
+      priceLabel: formatCurrency(indivPrice),
+      // Chỉ hiện gạch ngang nếu admin đã set original_price
+      ...(indivOriginalPrice ? { originalPriceLabel: formatCurrency(indivOriginalPrice) } : {}),
+      memberCount: 1, basePrice: indivPrice,
     },
     {
-      key: 'group_2', label: 'Nhóm 2 người', sublabel: `${formatCurrency(priceGroup)}/người`,
-      priceLabel: formatCurrency(priceGroup * 2),
-      originalPriceLabel: formatCurrency(price * 2),
-      memberCount: 2, basePrice: priceGroup * 2,
+      key: 'group_2', label: 'Nhóm 2 người', sublabel: `${formatCurrency(g2Price)}/người`,
+      priceLabel: formatCurrency(g2Price * 2),
+      originalPriceLabel: formatCurrency(g2OriginalPrice * 2),
+      memberCount: 2, basePrice: g2Price * 2,
       badge: { text: 'HOT NHẤT', color: 'bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 shadow-md shadow-red-500/30' },
     },
     {
-      key: 'group_4', label: 'Nhóm 4 người', sublabel: `${formatCurrency(Math.round(group4Price / 4))}/người`,
-      priceLabel: formatCurrency(group4Price),
-      originalPriceLabel: formatCurrency(price * 4),
-      memberCount: 4, basePrice: group4Price,
+      key: 'group_4', label: 'Nhóm 4 người', sublabel: `${formatCurrency(g4Price)}/người`,
+      priceLabel: formatCurrency(group4TotalPrice),
+      originalPriceLabel: formatCurrency(g4OriginalPrice * 4),
+      memberCount: 4, basePrice: group4TotalPrice,
       badge: { text: 'TIẾT KIỆM NHẤT', color: 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-md shadow-emerald-500/30' },
     },
   ];

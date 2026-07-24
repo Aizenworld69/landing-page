@@ -210,6 +210,9 @@ export default function PromoPopup({
   const ctaText = activeConfig.cta_text || 'ĐĂNG KÝ NGAY';
 
   const titleColor = activeConfig.title_color || '#ffffff';
+  const timerColor = activeConfig.timer_color || '#34d399';
+  const ctaBgColor = activeConfig.cta_bg_color || '#059669';
+  const ctaTextColor = activeConfig.cta_text_color || '#ffffff';
 
   if (!isPreview && (!isMounted || !config || config.is_active !== 1)) {
     return null;
@@ -273,14 +276,13 @@ export default function PromoPopup({
 
             {/* Image (if available & valid) */}
             {imageUrl && !imageError && (
-              <div className="relative h-44 w-full overflow-hidden bg-slate-950 sm:h-52">
+              <div className="relative w-full overflow-hidden bg-slate-950 flex items-center justify-center">
                 <img
                   src={imageUrl}
                   alt={title}
                   onError={() => setImageError(true)}
-                  className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                  className="w-full h-auto max-h-[380px] object-contain transition-transform duration-500 hover:scale-105"
                 />
-                <div className={`absolute inset-0 bg-gradient-to-t ${activeConfig.bg_image_url ? 'from-black/30 via-transparent to-transparent' : 'from-slate-900 via-slate-900/40 to-transparent'}`} />
               </div>
             )}
 
@@ -302,7 +304,7 @@ export default function PromoPopup({
 
               {/* Description — sanitize trước khi render để chặn XSS */}
               <div
-                className="mt-2.5 text-sm text-slate-300 leading-relaxed whitespace-pre-line [&_p]:my-1 [&_strong]:text-white"
+                className="mt-2.5 text-sm text-slate-300 leading-relaxed whitespace-pre-wrap [&_p]:my-1 [&_strong]:text-white"
                 dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
               />
 
@@ -320,25 +322,25 @@ export default function PromoPopup({
                     </p>
                     <div className="grid grid-cols-4 gap-2 text-center">
                       <div className={`rounded-xl p-2.5 border ${activeConfig.bg_image_url ? 'bg-black/30 border-white/10' : 'bg-slate-900/90 border-slate-700/50'}`}>
-                        <span className="block text-xl sm:text-2xl font-black text-emerald-400">
+                        <span className="block text-xl sm:text-2xl font-black" style={{ color: timerColor }}>
                           {String(timeLeft.days).padStart(2, '0')}
                         </span>
                         <span className="text-[10px] uppercase font-bold text-slate-400">Ngày</span>
                       </div>
                       <div className={`rounded-xl p-2.5 border ${activeConfig.bg_image_url ? 'bg-black/30 border-white/10' : 'bg-slate-900/90 border-slate-700/50'}`}>
-                        <span className="block text-xl sm:text-2xl font-black text-emerald-400">
+                        <span className="block text-xl sm:text-2xl font-black" style={{ color: timerColor }}>
                           {String(timeLeft.hours).padStart(2, '0')}
                         </span>
                         <span className="text-[10px] uppercase font-bold text-slate-400">Giờ</span>
                       </div>
                       <div className={`rounded-xl p-2.5 border ${activeConfig.bg_image_url ? 'bg-black/30 border-white/10' : 'bg-slate-900/90 border-slate-700/50'}`}>
-                        <span className="block text-xl sm:text-2xl font-black text-emerald-400">
+                        <span className="block text-xl sm:text-2xl font-black" style={{ color: timerColor }}>
                           {String(timeLeft.minutes).padStart(2, '0')}
                         </span>
                         <span className="text-[10px] uppercase font-bold text-slate-400">Phút</span>
                       </div>
                       <div className={`rounded-xl p-2.5 border ${activeConfig.bg_image_url ? 'bg-black/30 border-white/10' : 'bg-slate-900/90 border-slate-700/50'}`}>
-                        <span className="block text-xl sm:text-2xl font-black text-emerald-400">
+                        <span className="block text-xl sm:text-2xl font-black" style={{ color: timerColor }}>
                           {String(timeLeft.seconds).padStart(2, '0')}
                         </span>
                         <span className="text-[10px] uppercase font-bold text-slate-400">Giây</span>
@@ -352,7 +354,8 @@ export default function PromoPopup({
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <button
                   onClick={handleCtaClick}
-                  className="w-full flex-1 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3.5 text-center text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition-all hover:brightness-110 hover:shadow-emerald-500/40 active:scale-[0.98]"
+                  style={{ backgroundColor: ctaBgColor, color: ctaTextColor }}
+                  className="w-full flex-1 rounded-xl px-5 py-3.5 text-center text-sm font-bold shadow-lg transition-all hover:brightness-110 active:scale-[0.98]"
                 >
                   {ctaText}
                 </button>

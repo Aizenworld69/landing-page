@@ -22,7 +22,7 @@ interface CoursePlanSectionProps {
   qrIndividualPromo?: string;
   qrGroup2Promo?: string;
   qrGroup4Promo?: string;
-  plansConfig?: Record<string, { price?: number; label?: string; sublabel?: string }>;
+  plansConfig?: Record<string, { price?: number; original_price?: number; label?: string; sublabel?: string }>;
   earlyBirdDeadline?: string | null;
 }
 
@@ -599,9 +599,11 @@ function PlanCard({ plan, disabled, disabledReason = 'Đã hết hạn đăng k�
         disabled ? 'opacity-50 grayscale select-none cursor-not-allowed pointer-events-none' : 'cursor-pointer group'
       }`}
       style={{
-        background: disabled
-          ? 'rgba(15,25,40,0.6)'
-          : 'rgba(15,28,48,0.85)',
+        backgroundImage: disabled
+          ? 'linear-gradient(180deg, rgba(15,25,40,0.7) 0%, rgba(10,20,35,0.8) 100%), url("/backgoundTrangkhoahoc.jpg")'
+          : 'linear-gradient(180deg, rgba(15,30,60,0.40) 0%, rgba(10,20,45,0.50) 100%), url("/backgoundTrangkhoahoc.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         border: `1px solid ${getCardBorder()}`,
         boxShadow: getCardGlow(),
         backdropFilter: 'blur(8px)',
@@ -679,11 +681,11 @@ function PlanCard({ plan, disabled, disabledReason = 'Đã hết hạn đăng k�
         <div className="mt-auto">
           {plan.originalTotal > plan.totalPrice && (
             <p className="text-slate-600 line-through text-xs mb-0.5">
-              {formatCurrency(plan.originalTotal)}
+              {formatCurrency(Math.round(plan.originalTotal / plan.memberCount))}
             </p>
           )}
           <p
-            className="font-black text-xl mb-4 leading-tight"
+            className="font-black text-xl leading-tight"
             style={{
               color: isEarlyBird
                 ? '#fcd34d'
@@ -692,8 +694,14 @@ function PlanCard({ plan, disabled, disabledReason = 'Đã hết hạn đăng k�
                 : '#f8fafc',
             }}
           >
-            {formatCurrency(plan.totalPrice)}
+            {formatCurrency(plan.pricePerPerson)}
           </p>
+          {plan.memberCount > 1 && (
+            <p className="text-slate-400 text-xs mt-0.5 mb-4">
+              Tổng nhóm: {formatCurrency(plan.totalPrice)}
+            </p>
+          )}
+          {plan.memberCount === 1 && <div className="mb-4" />}
 
           {disabled ? (
             <div className="w-full py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-xs font-bold text-center">
@@ -701,14 +709,10 @@ function PlanCard({ plan, disabled, disabledReason = 'Đã hết hạn đăng k�
             </div>
           ) : (
             <button
-              className="w-full py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-1.5 transition-all"
+              className="w-full py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-1.5 transition-all hover:brightness-110 active:scale-95"
               style={{
-                background: isGroup4
-                  ? 'linear-gradient(90deg, #059669, #10b981)'
-                  : 'linear-gradient(90deg, #0284c7, #0ea5e9)',
-                boxShadow: isGroup4
-                  ? '0 4px 12px rgba(16,185,129,0.3)'
-                  : '0 4px 12px rgba(14,165,233,0.3)',
+                background: 'linear-gradient(90deg, #ea580c, #f97316)',
+                boxShadow: '0 4px 14px rgba(249,115,22,0.35)',
               }}
               onClick={(e) => { e.stopPropagation(); onClick(); }}
             >
@@ -751,16 +755,19 @@ export function CoursePlanSection({
   const isCompleted = courseStatus === 'completed';
 
   const individualPrice = plansConfig?.individual?.price ?? price;
+  const individualOriginalPrice = plansConfig?.individual?.original_price ?? null; // null = không gạch ngang
   const individualLabel = plansConfig?.individual?.label || '1 người';
   const individualSublabel = plansConfig?.individual?.sublabel || 'Đăng ký cá nhân';
 
   const group2PricePerPerson = plansConfig?.group_2?.price ?? priceGroup;
+  const group2OriginalPerPerson = plansConfig?.group_2?.original_price ?? price; // fallback: giá cá nhân
   const group2Label = plansConfig?.group_2?.label || 'Nhóm 2 người';
   const group2Sublabel = plansConfig?.group_2?.sublabel || `${formatCurrency(group2PricePerPerson)}/người`;
 
-  const group4Total = plansConfig?.group_4?.price ?? (priceGroup * 4);
+  const group4PricePerPerson = plansConfig?.group_4?.price ?? Math.round(priceGroup * 1.8 / 4);
+  const group4OriginalPerPerson = plansConfig?.group_4?.original_price ?? price; // fallback: giá cá nhân
   const group4Label = plansConfig?.group_4?.label || 'Nhóm 4 người';
-  const group4Sublabel = plansConfig?.group_4?.sublabel || `${formatCurrency(Math.round(group4Total / 4))}/người`;
+  const group4Sublabel = plansConfig?.group_4?.sublabel || `${formatCurrency(group4PricePerPerson)}/người`;
 
   const PLANS: PlanConfig[] = [
     {
@@ -781,7 +788,8 @@ export function CoursePlanSection({
       sublabel: individualSublabel,
       pricePerPerson: individualPrice,
       totalPrice: individualPrice,
-      originalTotal: price,
+      // Nếu có original_price → hiển thị gạch ngang; không có → bằng totalPrice (không gạch ngang)
+      originalTotal: individualOriginalPrice ?? individualPrice,
       memberCount: 1,
       icon: <IconUser className="w-5 h-5 text-sky-400" />,
       buttonLabel: 'Đăng ký ngay',
@@ -792,7 +800,7 @@ export function CoursePlanSection({
       sublabel: group2Sublabel,
       pricePerPerson: group2PricePerPerson,
       totalPrice: group2PricePerPerson * 2,
-      originalTotal: price * 2,
+      originalTotal: group2OriginalPerPerson * 2, // ← từ plans_config.group_2.original_price
       memberCount: 2,
       badge: { text: 'HOT NHẤT', color: 'bg-sky-500' },
       icon: <IconUsers className="w-5 h-5 text-sky-400" />,
@@ -802,9 +810,9 @@ export function CoursePlanSection({
       key: 'group_4',
       label: group4Label,
       sublabel: group4Sublabel,
-      pricePerPerson: Math.round(group4Total / 4),
-      totalPrice: group4Total,
-      originalTotal: price * 4,
+      pricePerPerson: group4PricePerPerson,
+      totalPrice: group4PricePerPerson * 4,
+      originalTotal: group4OriginalPerPerson * 4, // ← từ plans_config.group_4.original_price
       memberCount: 4,
       badge: { text: 'TIẾT KIỆM NHẤT', color: 'bg-emerald-500' },
       icon: <IconUsers className="w-5 h-5 text-emerald-400" />,

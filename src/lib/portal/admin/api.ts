@@ -135,7 +135,7 @@ export async function getAdminStats(): Promise<AdminStats> {
 // ── Courses ───────────────────────────────────────────
 export type CourseStatus = 'upcoming' | 'completed';
 
-export type PlanConfigItem = { price?: number; label?: string; sublabel?: string; [key: string]: unknown };
+export type PlanConfigItem = { price?: number; original_price?: number; label?: string; sublabel?: string; [key: string]: unknown };
 export type PlansConfigMap = Record<string, PlanConfigItem>;
 
 export interface Course {

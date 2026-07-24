@@ -34,8 +34,11 @@ export default function PopupForm({ initialConfig }: PopupFormProps) {
     image_url: initialConfig?.image_url || '',
     bg_image_url: initialConfig?.bg_image_url || '',
     cta_text: initialConfig?.cta_text || 'ĐĂNG KÝ NGAY',
+    cta_bg_color: initialConfig?.cta_bg_color || '#059669',
+    cta_text_color: initialConfig?.cta_text_color || '#ffffff',
     cta_link: initialConfig?.cta_link || '#register',
     countdown_end: formatDateTimeLocal(initialConfig?.countdown_end) || formatDateTimeLocal(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()),
+    timer_color: initialConfig?.timer_color || '#34d399',
     delay_seconds: initialConfig?.delay_seconds ?? 3,
     is_active: initialConfig?.is_active ?? 1,
   });

@@ -914,8 +914,11 @@ export interface PopupConfig {
   image_url: string;
   bg_image_url?: string;
   cta_text: string;
+  cta_bg_color?: string;
+  cta_text_color?: string;
   cta_link: string;
   countdown_end: string;
+  timer_color?: string;
   delay_seconds: number;
   is_active: number;
   updated_at?: string;
@@ -977,8 +980,11 @@ export async function getPopupConfigAction(): Promise<PopupConfig | null> {
     description: 'Đăng ký ngay hôm nay để nhận ngay voucher ưu đãi 20% học phí!',
     image_url: '',
     cta_text: 'ĐĂNG KÝ NGAY',
+    cta_bg_color: '#059669',
+    cta_text_color: '#ffffff',
     cta_link: '#register',
     countdown_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    timer_color: '#34d399',
     delay_seconds: 0,
     is_active: 1,
     bg_image_url: '',
@@ -992,8 +998,11 @@ export async function updatePopupConfigAction(data: {
   image_url: string;
   bg_image_url?: string;
   cta_text: string;
+  cta_bg_color?: string;
+  cta_text_color?: string;
   cta_link: string;
   countdown_end: string;
+  timer_color?: string;
   delay_seconds: number;
   is_active: number;
 }) {
@@ -1005,8 +1014,11 @@ export async function updatePopupConfigAction(data: {
     image_url: z.string().max(1000),
     bg_image_url: z.string().max(1000).optional().default(''),
     cta_text: z.string().min(1).max(100),
+    cta_bg_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().default('#059669'),
+    cta_text_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().default('#ffffff'),
     cta_link: z.string().max(500),
     countdown_end: z.string().max(100),
+    timer_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().default('#34d399'),
     delay_seconds: z.number().int().min(0).max(60),
     is_active: z.union([z.literal(0), z.literal(1)]),
   });
@@ -1029,8 +1041,11 @@ export async function updatePopupConfigAction(data: {
       image_url: data.image_url || '',
       bg_image_url: data.bg_image_url || '',
       cta_text: data.cta_text || 'ĐĂNG KÝ NGAY',
+      cta_bg_color: data.cta_bg_color || '#059669',
+      cta_text_color: data.cta_text_color || '#ffffff',
       cta_link: data.cta_link || '#register',
       countdown_end: data.countdown_end || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      timer_color: data.timer_color || '#34d399',
       delay_seconds: Number(data.delay_seconds) >= 0 ? Number(data.delay_seconds) : 0,
       is_active: data.is_active ? 1 : 0,
       updated_at: new Date().toISOString(),
